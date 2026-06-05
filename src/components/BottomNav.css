@@ -1,0 +1,77 @@
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: var(--max-width);
+  height: var(--nav-height);
+  background: var(--color-white);
+  border-top: 1px solid var(--color-grey-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: var(--space-sm) 0;
+  padding-bottom: env(safe-area-inset-bottom, var(--space-sm));
+  z-index: 100;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-decoration: none;
+  color: var(--color-grey);
+  transition: color 0.2s ease;
+  padding: var(--space-xs) var(--space-sm);
+}
+
+.nav-item.active {
+  color: var(--color-primary);
+}
+
+.nav-icon {
+  width: 22px;
+  height: 22px;
+}
+
+.nav-label {
+  font-size: 0.6875rem;
+  font-weight: 500;
+}
+
+/* Prominent Book button */
+.nav-item-primary {
+  position: relative;
+  color: var(--color-primary);
+}
+
+.nav-item-primary-circle {
+  width: 48px;
+  height: 48px;
+  background: var(--color-primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: -20px;
+  box-shadow: 0 4px 12px rgba(123, 45, 139, 0.3);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nav-item-primary-circle .nav-icon {
+  color: var(--color-white);
+  stroke: var(--color-white);
+}
+
+.nav-item-primary:hover .nav-item-primary-circle,
+.nav-item-primary.active .nav-item-primary-circle {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(123, 45, 139, 0.4);
+}
+
+.nav-item-primary .nav-label {
+  color: var(--color-primary);
+  font-weight: 600;
+}

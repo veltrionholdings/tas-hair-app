@@ -1,0 +1,113 @@
+.my-bookings-page .page-header {
+  padding: var(--space-xl) 0 var(--space-lg);
+}
+
+.my-bookings-page .page-header p {
+  margin-top: var(--space-xs);
+  font-size: 0.9375rem;
+}
+
+.bookings-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding-bottom: var(--space-xl);
+}
+
+.booking-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-md);
+}
+
+.booking-card-header h3 {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.badge {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  letter-spacing: 0.5px;
+}
+
+.badge-confirmed {
+  background: rgba(76, 175, 80, 0.1);
+  color: var(--color-success);
+}
+
+.badge-pending {
+  background: rgba(255, 152, 0, 0.1);
+  color: var(--color-warning);
+}
+
+.badge-completed {
+  background: rgba(123, 45, 139, 0.1);
+  color: var(--color-primary);
+}
+
+.badge-cancelled {
+  background: rgba(229, 57, 53, 0.1);
+  color: var(--color-error);
+}
+
+.booking-card-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.booking-detail {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: 0.875rem;
+  color: var(--color-grey-dark);
+}
+
+.detail-icon {
+  font-size: 0.875rem;
+}
+
+.btn-cancel {
+  margin-top: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  font-size: 0.8125rem;
+  color: var(--color-error);
+  border: 1px solid var(--color-error);
+  border-radius: var(--radius-md);
+  background: transparent;
+  transition: all 0.2s ease;
+}
+
+.btn-cancel:hover {
+  background: var(--color-error);
+  color: var(--color-white);
+}
+
+/* ─── Empty State ────────────────────────────────────────────────────────── */
+
+.empty-state {
+  text-align: center;
+  padding: var(--space-3xl) 0;
+}
+
+.empty-icon {
+  font-size: 3rem;
+  margin-bottom: var(--space-md);
+}
+
+.empty-state h3 {
+  font-family: var(--font-body);
+  margin-bottom: var(--space-sm);
+}
+
+.empty-state p {
+  font-size: 0.9375rem;
+  color: var(--color-grey);
+}

@@ -1,0 +1,141 @@
+.contact-page .page-header {
+  padding: var(--space-xl) 0 var(--space-lg);
+}
+
+.contact-page .page-header p {
+  margin-top: var(--space-xs);
+  font-size: 0.9375rem;
+}
+
+/* ─── Contact Cards ──────────────────────────────────────────────────────── */
+
+.contact-cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-bottom: var(--space-2xl);
+}
+
+.contact-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.contact-card:active {
+  transform: scale(0.98);
+}
+
+.contact-card-whatsapp {
+  border: 1.5px solid #25D366;
+}
+
+.contact-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.contact-info h4 {
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-black);
+}
+
+.contact-info p {
+  font-size: 0.8125rem;
+  color: var(--color-grey-dark);
+  margin-top: 2px;
+}
+
+.contact-hint {
+  font-size: 0.6875rem;
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+/* ─── Hours ──────────────────────────────────────────────────────────────── */
+
+.hours-section {
+  margin-bottom: var(--space-2xl);
+}
+
+.hours-section h2 {
+  margin-bottom: var(--space-md);
+}
+
+.hours-card {
+  padding: var(--space-md) var(--space-lg);
+}
+
+.hours-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--color-off-white);
+}
+
+.hours-row:last-child {
+  border-bottom: none;
+}
+
+.hours-day {
+  font-size: 0.875rem;
+  color: var(--color-grey-dark);
+}
+
+.hours-time {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-black);
+}
+
+.hours-note {
+  margin-top: var(--space-md);
+  font-size: 0.8125rem;
+  color: var(--color-primary);
+  font-weight: 500;
+  text-align: center;
+}
+
+/* ─── Social ─────────────────────────────────────────────────────────────── */
+
+.social-section {
+  margin-bottom: var(--space-2xl);
+}
+
+.social-section h2 {
+  margin-bottom: var(--space-md);
+}
+
+.social-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.social-link:active {
+  transform: scale(0.98);
+}
+
+.social-icon {
+  font-size: 1.5rem;
+}
+
+.social-handle {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-black);
+  flex: 1;
+}
+
+.social-cta {
+  font-size: 0.75rem;
+  color: var(--color-primary);
+  font-weight: 500;
+}

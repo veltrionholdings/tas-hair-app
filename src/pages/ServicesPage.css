@@ -1,0 +1,62 @@
+.services-page .page-header {
+  padding: var(--space-xl) 0 var(--space-lg);
+}
+
+.services-page .page-header p {
+  margin-top: var(--space-xs);
+  font-size: 0.9375rem;
+}
+
+.services-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding-bottom: var(--space-xl);
+}
+
+.service-card {
+  border-left: 3px solid var(--color-primary);
+}
+
+.service-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+.service-card-header h3 {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.service-price {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  white-space: nowrap;
+}
+
+.service-description {
+  font-size: 0.8125rem;
+  color: var(--color-grey-dark);
+  margin-bottom: var(--space-md);
+}
+
+.service-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.service-duration {
+  font-size: 0.8125rem;
+  color: var(--color-grey);
+}
+
+.service-card-footer .btn {
+  padding: var(--space-sm) var(--space-lg);
+  font-size: 0.8125rem;
+}
