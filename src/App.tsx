@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
+import { restoreSession } from './api/client';
 import Layout from './components/Layout';
 import HomePage from './pages/HomePage';
 import ServicesPage from './pages/ServicesPage';
@@ -8,6 +10,10 @@ import MyBookingsPage from './pages/MyBookingsPage';
 import ContactPage from './pages/ContactPage';
 
 function App() {
+  useEffect(() => {
+    restoreSession();
+  }, []);
+
   return (
     <Routes>
       <Route element={<Layout />}>

@@ -16,7 +16,7 @@ const DEMO_SERVICES: Service[] = [
 
 function ServicesPage() {
   const [services, setServices] = useState<Service[]>(DEMO_SERVICES);
-  const [loading, setLoading] = useState(false);
+  const [_loading, setLoading] = useState(false);
 
   useEffect(() => {
     loadServices();
@@ -36,7 +36,7 @@ function ServicesPage() {
     }
   }
 
-  function formatPrice(cents: number | null, currency: string | null): string {
+  function formatPrice(cents: number | null, _currency: string | null): string {
     if (cents === null) return 'Price on request';
     const amount = cents / 100;
     return `R${amount.toFixed(0)}`;

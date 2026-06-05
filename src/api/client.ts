@@ -4,6 +4,8 @@
  */
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/v1';
+const COGNITO_CLIENT_ID = import.meta.env.VITE_COGNITO_CLIENT_ID || 'm535i5660f5harvfu6fou0cu9';
+const COGNITO_REGION = import.meta.env.VITE_COGNITO_REGION || 'eu-west-1';
 
 interface ApiError {
   error: {
@@ -234,4 +236,110 @@ export interface Pagination {
 // ─── Singleton Instance ───────────────────────────────────────────────────────
 
 export const api = new BookingsApiClient(API_BASE_URL);
+
+/**
+ * Authenticate with Cognito and store the token.
+ * Uses the Cognito InitiateAuth API directly (no SDK needed).
+ */
+export async function authenticate(email: string, password: string): Promise<string> {
+  const url = `https://cognito-idp.${COGNITO_REGION}.amazonaws.com/`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-amz-json-1.1',
+      'X-Amz-Target': 'AWSCognitoIdentityProviderService.InitiateAuth',
+    },
+    body: JSON.stringify({
+      AuthFlow: 'USER_PASSWORD_AUTH',
+      ClientId: COGNITO_CLIENT_ID,
+      AuthParameters: {
+        USERNAME: email,
+        PASSWORD: password,
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.message || 'Authentication failed');
+  }
+
+  const data = await response.json();
+  const token = data.AuthenticationResult.IdToken;
+  api.setToken(token);
+
+  // Store token in localStorage
+  localStorage.setItem('auth_token', token);
+  localStorage.setItem('auth_email', email);
+
+  return token;
+}
+
+/**
+ * Sign up a new customer account with Cognito.
+ */
+export async function signUp(
+  email: string,
+  password: string,
+  tenantId: string = 'da8e5df8-f070-4671-a176-590a76c574b2'
+): Promise<void> {
+  const url = `https://cognito-idp.${COGNITO_REGION}.amazonaws.com/`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-amz-json-1.1',
+      'X-Amz-Target': 'AWSCognitoIdentityProviderService.SignUp',
+    },
+    body: JSON.stringify({
+      ClientId: COGNITO_CLIENT_ID,
+      Username: email,
+      Password: password,
+      UserAttributes: [
+        { Name: 'email', Value: email },
+        { Name: 'custom:tenant_id', Value: tenantId },
+        { Name: 'custom:role', Value: 'customer' },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.message || 'Sign up failed');
+  }
+}
+
+/**
+ * Restore token from localStorage on app load.
+ */
+export function restoreSession(): boolean {
+  const token = localStorage.getItem('auth_token');
+  if (token) {
+    // Check if token is expired (JWT exp claim)
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (payload.exp * 1000 > Date.now()) {
+        api.setToken(token);
+        return true;
+      }
+    } catch {
+      // Invalid token
+    }
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('auth_email');
+  }
+  return false;
+}
+
+export function logout() {
+  api.clearToken();
+  localStorage.removeItem('auth_token');
+  localStorage.removeItem('auth_email');
+}
+
+export function getStoredEmail(): string | null {
+  return localStorage.getItem('auth_email');
+}
+
 export default api;
