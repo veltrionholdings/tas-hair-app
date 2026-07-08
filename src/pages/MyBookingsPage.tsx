@@ -1,15 +1,20 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { api, Booking } from '../api/client';
+import { Link, useNavigate } from 'react-router-dom';
+import { api, Booking, restoreSession } from '../api/client';
 import ConfirmModal from '../components/ConfirmModal';
 import './MyBookingsPage.css';
 
 function MyBookingsPage() {
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!restoreSession()) {
+      navigate('/login', { state: { returnTo: '/my-bookings' } });
+      return;
+    }
     loadBookings();
   }, []);
 

@@ -1,0 +1,45 @@
+.login-page {
+  display: flex;
+  align-items: center;
+  min-height: calc(100vh - var(--header-height) - var(--nav-height));
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: var(--space-xl);
+}
+
+.login-header p {
+  margin-top: var(--space-sm);
+  font-size: 0.9375rem;
+}
+
+.login-form {
+  margin-bottom: var(--space-xl);
+}
+
+.login-switch {
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--color-grey-dark);
+}
+
+.link-btn {
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: underline;
+  font-size: inherit;
+}
+
+.success-banner {
+  background: rgba(76, 175, 80, 0.08);
+  border: 1px solid rgba(76, 175, 80, 0.3);
+  color: var(--color-success);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  margin-bottom: var(--space-md);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}

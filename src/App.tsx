@@ -1,6 +1,4 @@
-import { useEffect, useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { authenticate, restoreSession } from './api/client';
 import ErrorBoundary from './components/ErrorBoundary';
 import Layout from './components/Layout';
 import HomePage from './pages/HomePage';
@@ -9,42 +7,10 @@ import BookingPage from './pages/BookingPage';
 import BookingConfirmationPage from './pages/BookingConfirmationPage';
 import MyBookingsPage from './pages/MyBookingsPage';
 import ContactPage from './pages/ContactPage';
+import LoginPage from './pages/LoginPage';
+import ProfilePage from './pages/ProfilePage';
 
 function App() {
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    initAuth();
-  }, []);
-
-  async function initAuth() {
-    // Try restoring an existing session first
-    if (restoreSession()) {
-      setReady(true);
-      return;
-    }
-
-    // Auto-authenticate with demo credentials for the demo
-    // In production, this would be replaced with a real login flow
-    try {
-      await authenticate('admin@tashair.test', 'TasHair2025!');
-    } catch {
-      // If auth fails, the app still works with demo/fallback data
-    }
-    setReady(true);
-  }
-
-  if (!ready) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh' }}>
-        <div style={{ textAlign: 'center', color: '#7B2D8B' }}>
-          <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>💇‍♀️</div>
-          <p style={{ fontSize: '0.875rem' }}>Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <ErrorBoundary>
       <Routes>
@@ -55,6 +21,8 @@ function App() {
           <Route path="/booking-confirmed" element={<BookingConfirmationPage />} />
           <Route path="/my-bookings" element={<MyBookingsPage />} />
           <Route path="/contact" element={<ContactPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Route>
       </Routes>
     </ErrorBoundary>

@@ -76,10 +76,12 @@ body {
   line-height: 1.6;
   color: var(--color-black);
   background-color: var(--color-off-white);
+  min-height: 100vh;
   min-height: 100dvh;
 }
 
 #root {
+  min-height: 100vh;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { api, Service, Resource, AvailableSlot } from '../api/client';
+import { api, Service, Resource, AvailableSlot, restoreSession } from '../api/client';
 import './BookingPage.css';
 
 type BookingStep = 'service' | 'stylist' | 'datetime' | 'details' | 'confirm';
@@ -8,6 +8,13 @@ type BookingStep = 'service' | 'stylist' | 'datetime' | 'details' | 'confirm';
 function BookingPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+
+  // Auth gate — check if user is logged in, redirect to login if not
+  useEffect(() => {
+    if (!restoreSession()) {
+      navigate('/login', { state: { returnTo: '/book' + window.location.search } });
+    }
+  }, []);
 
   const [step, setStep] = useState<BookingStep>('service');
   const [services, setServices] = useState<Service[]>([]);
