@@ -215,6 +215,7 @@ export interface Service {
   duration_minutes: number;
   buffer_minutes: number;
   capacity: number;
+  resource_type_id: string;
   price_cents: number | null;
   currency: string | null;
   is_active: boolean;
