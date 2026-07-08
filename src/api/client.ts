@@ -89,6 +89,14 @@ class BookingsApiClient {
     return this.request<Service>('GET', `/services/${id}`);
   }
 
+  async updateService(id: string, data: Partial<Pick<Service, 'name' | 'description' | 'duration_minutes' | 'buffer_minutes' | 'price_cents' | 'currency' | 'is_active'>>) {
+    return this.request<Service>('PATCH', `/services/${id}`, data);
+  }
+
+  async deleteService(id: string) {
+    return this.request<void>('DELETE', `/services/${id}`);
+  }
+
   // ─── Resources (Stylists) ──────────────────────────────────────────────────
 
   async getResources(filters?: { resource_type_id?: string; is_active?: boolean }) {
@@ -100,6 +108,14 @@ class BookingsApiClient {
 
   async getResourceServices(resourceId: string) {
     return this.request<{ data: Service[] }>('GET', `/resources/${resourceId}/services`);
+  }
+
+  async setResourceSchedule(resourceId: string, schedules: Array<{ day_of_week: number; start_time: string; end_time: string }>) {
+    return this.request<{ data: any[] }>('PUT', `/resources/${resourceId}/schedules`, { schedules });
+  }
+
+  async getResourceSchedule(resourceId: string) {
+    return this.request<{ data: Array<{ id: string; day_of_week: number; start_time: string; end_time: string; is_active: boolean }> }>('GET', `/resources/${resourceId}/schedules`);
   }
 
   // ─── Availability ──────────────────────────────────────────────────────────
@@ -137,6 +153,14 @@ class BookingsApiClient {
 
   async noShowBooking(id: string) {
     return this.request<Booking>('POST', `/bookings/${id}/no-show`);
+  }
+
+  async rescheduleBooking(id: string, newStartTime: string) {
+    return this.request<Booking>('PATCH', `/bookings/${id}`, { start_time: newStartTime });
+  }
+
+  async getBooking(id: string) {
+    return this.request<Booking>('GET', `/bookings/${id}`);
   }
 
   // ─── Customers ─────────────────────────────────────────────────────────────

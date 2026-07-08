@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { api, Service } from '../../api/client';
+import ConfirmModal from '../../components/ConfirmModal';
 import './AdminPages.css';
 
 function AdminServicesPage() {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showAdd, setShowAdd] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [duration, setDuration] = useState('');
@@ -14,77 +17,83 @@ function AdminServicesPage() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
 
-  useEffect(() => {
-    loadServices();
-  }, []);
+  useEffect(() => { loadServices(); }, []);
 
   async function loadServices() {
     try {
       setLoading(true);
       const result = await api.getServices();
       setServices(result.data);
-    } catch {
-      setServices([]);
-    } finally {
-      setLoading(false);
-    }
+    } catch { setServices([]); }
+    finally { setLoading(false); }
   }
 
-  async function handleAdd(e: React.FormEvent) {
+  function openAdd() {
+    setEditingId(null);
+    setName(''); setDescription(''); setDuration(''); setBuffer('10'); setPrice('');
+    setShowForm(true);
+  }
+
+  function openEdit(svc: Service) {
+    setEditingId(svc.id);
+    setName(svc.name);
+    setDescription(svc.description || '');
+    setDuration(String(svc.duration_minutes));
+    setBuffer(String(svc.buffer_minutes));
+    setPrice(svc.price_cents ? String(svc.price_cents / 100) : '');
+    setShowForm(true);
+  }
+
+  async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     if (!name || !duration) return;
+    setSaving(true); setMessage('');
 
-    setSaving(true);
-    setMessage('');
     try {
-      // We need the resource_type_id — use the first one from an existing service
-      const resourceTypeId = services[0]?.resource_type_id;
-      if (!resourceTypeId) {
-        setMessage('Error: No resource type found. Create a resource type first.');
-        return;
-      }
-
-      const body = {
-        name,
-        description: description || undefined,
-        duration_minutes: parseInt(duration),
-        buffer_minutes: parseInt(buffer) || 0,
-        resource_type_id: resourceTypeId,
-        price_cents: price ? parseInt(price) * 100 : undefined,
-        currency: 'ZAR',
-      };
-
-      // Direct API call since the typed client doesn't have createService
-      const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/v1'}/services`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-          },
-          body: JSON.stringify(body),
-        }
-      );
-
-      if (response.ok) {
-        setMessage(`Service "${name}" added.`);
-        setShowAdd(false);
-        setName('');
-        setDescription('');
-        setDuration('');
-        setBuffer('10');
-        setPrice('');
-        await loadServices();
+      if (editingId) {
+        await api.updateService(editingId, {
+          name,
+          description: description || null,
+          duration_minutes: parseInt(duration),
+          buffer_minutes: parseInt(buffer) || 0,
+          price_cents: price ? parseInt(price) * 100 : null,
+          currency: 'ZAR',
+        } as any);
+        setMessage(`"${name}" updated.`);
       } else {
-        const err = await response.json();
-        setMessage(`Error: ${err.error?.message || 'Failed to create service'}`);
+        const resourceTypeId = services[0]?.resource_type_id;
+        if (!resourceTypeId) { setMessage('Error: No resource type found.'); return; }
+
+        const response = await fetch(
+          `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/v1'}/services`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
+            body: JSON.stringify({
+              name, description: description || undefined,
+              duration_minutes: parseInt(duration), buffer_minutes: parseInt(buffer) || 0,
+              resource_type_id: resourceTypeId,
+              price_cents: price ? parseInt(price) * 100 : undefined, currency: 'ZAR',
+            }),
+          }
+        );
+        if (!response.ok) { const err = await response.json(); throw new Error(err.error?.message || 'Failed'); }
+        setMessage(`"${name}" added.`);
       }
+      setShowForm(false);
+      await loadServices();
     } catch (err: any) {
       setMessage(`Error: ${err.message}`);
-    } finally {
-      setSaving(false);
-    }
+    } finally { setSaving(false); }
+  }
+
+  async function handleDelete() {
+    if (!deleteId) return;
+    try {
+      await api.deleteService(deleteId);
+      await loadServices();
+    } catch { /* ignore */ }
+    setDeleteId(null);
   }
 
   function formatPrice(cents: number | null): string {
@@ -104,9 +113,7 @@ function AdminServicesPage() {
       <div className="container">
         <div className="page-header">
           <h1>Services</h1>
-          <button className="btn btn-primary" onClick={() => setShowAdd(true)}>
-            + Add
-          </button>
+          <button className="btn btn-primary" onClick={openAdd}>+ Add</button>
         </div>
 
         {message && (
@@ -115,64 +122,73 @@ function AdminServicesPage() {
           </div>
         )}
 
-        {showAdd && (
+        {showForm && (
           <div className="card invite-form">
-            <h3>Add Service</h3>
-            <form onSubmit={handleAdd}>
+            <h3>{editingId ? 'Edit Service' : 'Add Service'}</h3>
+            <form onSubmit={handleSave}>
               <div className="form-group">
-                <label htmlFor="svc-name">Name *</label>
-                <input id="svc-name" type="text" className="form-input" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Pixie Cut" required />
+                <label>Name *</label>
+                <input type="text" className="form-input" value={name} onChange={e => setName(e.target.value)} required />
               </div>
               <div className="form-group">
-                <label htmlFor="svc-desc">Description</label>
-                <input id="svc-desc" type="text" className="form-input" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Short description" />
+                <label>Description</label>
+                <input type="text" className="form-input" value={description} onChange={e => setDescription(e.target.value)} />
               </div>
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="svc-dur">Duration (min) *</label>
-                  <input id="svc-dur" type="number" className="form-input" value={duration} onChange={(e) => setDuration(e.target.value)} placeholder="45" min="5" required />
+                  <label>Duration (min) *</label>
+                  <input type="number" className="form-input" value={duration} onChange={e => setDuration(e.target.value)} min="5" required />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="svc-buf">Buffer (min)</label>
-                  <input id="svc-buf" type="number" className="form-input" value={buffer} onChange={(e) => setBuffer(e.target.value)} placeholder="10" min="0" />
+                  <label>Buffer (min)</label>
+                  <input type="number" className="form-input" value={buffer} onChange={e => setBuffer(e.target.value)} min="0" />
                 </div>
               </div>
               <div className="form-group">
-                <label htmlFor="svc-price">Price (ZAR)</label>
-                <input id="svc-price" type="number" className="form-input" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="250" min="0" />
+                <label>Price (ZAR)</label>
+                <input type="number" className="form-input" value={price} onChange={e => setPrice(e.target.value)} min="0" />
               </div>
               <div className="form-actions">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowAdd(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary" disabled={saving}>
-                  {saving ? 'Saving...' : 'Add Service'}
-                </button>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
               </div>
             </form>
           </div>
         )}
 
         {loading ? (
-          <div className="loading-state">
-            <div className="loading-shimmer" style={{ height: 60 }} />
-            <div className="loading-shimmer" style={{ height: 60 }} />
-          </div>
+          <div className="loading-state"><div className="loading-shimmer" style={{ height: 60 }} /><div className="loading-shimmer" style={{ height: 60 }} /></div>
         ) : (
           <div className="staff-list">
-            {services.map(service => (
-              <div key={service.id} className="staff-card card">
+            {services.map(svc => (
+              <div key={svc.id} className="staff-card card">
                 <div className="staff-info">
-                  <div className="staff-name">{service.name}</div>
-                  <div className="staff-email">{service.description || 'No description'}</div>
+                  <div className="staff-name">{svc.name}</div>
+                  <div className="staff-email">{svc.description || 'No description'}</div>
                 </div>
                 <div className="staff-meta">
-                  <span className="staff-role">{formatDuration(service.duration_minutes)}</span>
-                  <span style={{ fontWeight: 600, color: 'var(--color-primary)' }}>{formatPrice(service.price_cents)}</span>
+                  <span className="staff-role">{formatDuration(svc.duration_minutes)}</span>
+                  <span style={{ fontWeight: 600, color: 'var(--color-primary)' }}>{formatPrice(svc.price_cents)}</span>
+                </div>
+                <div className="staff-actions">
+                  <button className="btn-small btn-activate" onClick={() => openEdit(svc)}>Edit</button>
+                  <button className="btn-small btn-delete" onClick={() => setDeleteId(svc.id)}>Delete</button>
                 </div>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      <ConfirmModal
+        isOpen={deleteId !== null}
+        title="Delete Service"
+        message="This will deactivate the service. Existing bookings will not be affected."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteId(null)}
+      />
     </div>
   );
 }
