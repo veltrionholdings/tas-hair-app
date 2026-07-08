@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api, Booking } from '../api/client';
+import ConfirmModal from '../components/ConfirmModal';
 import './MyBookingsPage.css';
 
 function MyBookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
 
   useEffect(() => {
     loadBookings();
@@ -17,22 +19,23 @@ function MyBookingsPage() {
       const result = await api.getBookings();
       setBookings(result.data);
     } catch {
-      // If API fails, just show empty state
       setBookings([]);
     } finally {
       setLoading(false);
     }
   }
 
-  async function handleCancel(bookingId: string) {
-    if (!confirm('Are you sure you want to cancel this booking?')) return;
+  async function handleConfirmCancel() {
+    if (!cancellingId) return;
     try {
-      await api.cancelBooking(bookingId, 'Customer requested cancellation');
+      await api.cancelBooking(cancellingId, 'Customer requested cancellation');
       setBookings(prev => prev.map(b =>
-        b.id === bookingId ? { ...b, status: 'cancelled' } : b
+        b.id === cancellingId ? { ...b, status: 'cancelled' } : b
       ));
     } catch {
-      alert('Unable to cancel. Please contact the salon directly.');
+      // Could show an error toast here
+    } finally {
+      setCancellingId(null);
     }
   }
 
@@ -51,7 +54,6 @@ function MyBookingsPage() {
 
   function formatBookingTime(localTime: string | undefined): string {
     if (!localTime) return '';
-    // Handle both "10:00" and "2026-07-09T10:00:00" formats
     if (localTime.includes('T')) {
       return localTime.split('T')[1]?.substring(0, 5) || localTime;
     }
@@ -136,7 +138,7 @@ function MyBookingsPage() {
               {(booking.status === 'confirmed' || booking.status === 'pending') && (
                 <button
                   className="btn-cancel"
-                  onClick={() => handleCancel(booking.id)}
+                  onClick={() => setCancellingId(booking.id)}
                 >
                   Cancel Booking
                 </button>
@@ -145,6 +147,16 @@ function MyBookingsPage() {
           ))}
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={cancellingId !== null}
+        title="Cancel Booking"
+        message="Are you sure you want to cancel this appointment? This action cannot be undone."
+        confirmLabel="Yes, Cancel"
+        cancelLabel="Keep Booking"
+        onConfirm={handleConfirmCancel}
+        onCancel={() => setCancellingId(null)}
+      />
     </div>
   );
 }

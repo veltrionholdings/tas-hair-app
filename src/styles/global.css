@@ -129,7 +129,7 @@ p {
 
 .container {
   width: 100%;
-  max-width: var(--max-width);
+  max-width: 720px;
   margin: 0 auto;
   padding: 0 var(--space-md);
 }
