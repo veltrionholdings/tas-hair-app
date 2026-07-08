@@ -31,6 +31,31 @@
   font-size: inherit;
 }
 
+.link-btn:disabled {
+  opacity: 0.5;
+}
+
+.forgot-link {
+  display: block;
+  text-align: center;
+  margin-top: var(--space-md);
+  font-size: 0.8125rem;
+}
+
+.resend-link {
+  display: block;
+  text-align: center;
+  margin-top: var(--space-md);
+  font-size: 0.8125rem;
+}
+
+.form-input-code {
+  text-align: center;
+  font-size: 1.5rem;
+  letter-spacing: 0.5rem;
+  font-weight: 600;
+}
+
 .success-banner {
   background: rgba(76, 175, 80, 0.08);
   border: 1px solid rgba(76, 175, 80, 0.3);
