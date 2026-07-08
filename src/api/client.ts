@@ -192,13 +192,16 @@ export interface AvailableSlot {
 export interface Booking {
   id: string;
   status: string;
-  service: { id: string; name: string };
-  resource: { id: string; name: string };
-  customer: { id: string; first_name: string; last_name: string };
+  service: { id: string; name: string } | string;
+  resource: { id: string; name: string } | string | null;
+  customer: { id: string; first_name: string; last_name: string } | string;
+  service_id?: string;
+  resource_id?: string | null;
+  customer_id?: string;
   start_time: string;
-  start_time_local: string;
+  start_time_local?: string;
   end_time: string;
-  end_time_local: string;
+  end_time_local?: string;
   party_size: number;
   notes: string | null;
   created_at: string;

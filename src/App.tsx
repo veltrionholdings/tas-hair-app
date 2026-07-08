@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { authenticate, restoreSession } from './api/client';
+import ErrorBoundary from './components/ErrorBoundary';
 import Layout from './components/Layout';
 import HomePage from './pages/HomePage';
 import ServicesPage from './pages/ServicesPage';
@@ -45,16 +46,18 @@ function App() {
   }
 
   return (
-    <Routes>
-      <Route element={<Layout />}>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/services" element={<ServicesPage />} />
-        <Route path="/book" element={<BookingPage />} />
-        <Route path="/booking-confirmed" element={<BookingConfirmationPage />} />
-        <Route path="/my-bookings" element={<MyBookingsPage />} />
-        <Route path="/contact" element={<ContactPage />} />
-      </Route>
-    </Routes>
+    <ErrorBoundary>
+      <Routes>
+        <Route element={<Layout />}>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/services" element={<ServicesPage />} />
+          <Route path="/book" element={<BookingPage />} />
+          <Route path="/booking-confirmed" element={<BookingConfirmationPage />} />
+          <Route path="/my-bookings" element={<MyBookingsPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+        </Route>
+      </Routes>
+    </ErrorBoundary>
   );
 }
 
