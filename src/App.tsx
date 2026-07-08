@@ -1,5 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
+import { restoreSession } from './api/client';
 import ErrorBoundary from './components/ErrorBoundary';
+import RoleGuard from './components/RoleGuard';
 import Layout from './components/Layout';
 import HomePage from './pages/HomePage';
 import ServicesPage from './pages/ServicesPage';
@@ -9,20 +11,39 @@ import MyBookingsPage from './pages/MyBookingsPage';
 import ContactPage from './pages/ContactPage';
 import LoginPage from './pages/LoginPage';
 import ProfilePage from './pages/ProfilePage';
+import StaffPage from './pages/admin/StaffPage';
+import AdminBookingsPage from './pages/admin/AdminBookingsPage';
+import AdminServicesPage from './pages/admin/AdminServicesPage';
+import SchedulePage from './pages/employee/SchedulePage';
+
+// Restore session once on app load
+restoreSession();
 
 function App() {
   return (
     <ErrorBoundary>
       <Routes>
         <Route element={<Layout />}>
+          {/* Public routes */}
           <Route path="/" element={<HomePage />} />
           <Route path="/services" element={<ServicesPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/login" element={<LoginPage />} />
+
+          {/* Customer routes (auth required) */}
           <Route path="/book" element={<BookingPage />} />
           <Route path="/booking-confirmed" element={<BookingConfirmationPage />} />
           <Route path="/my-bookings" element={<MyBookingsPage />} />
-          <Route path="/contact" element={<ContactPage />} />
-          <Route path="/login" element={<LoginPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+
+          {/* Admin routes */}
+          <Route path="/admin" element={<RoleGuard allowedRoles={['admin']}><AdminBookingsPage /></RoleGuard>} />
+          <Route path="/admin/bookings" element={<RoleGuard allowedRoles={['admin']}><AdminBookingsPage /></RoleGuard>} />
+          <Route path="/admin/staff" element={<RoleGuard allowedRoles={['admin']}><StaffPage /></RoleGuard>} />
+          <Route path="/admin/services" element={<RoleGuard allowedRoles={['admin']}><AdminServicesPage /></RoleGuard>} />
+
+          {/* Employee routes */}
+          <Route path="/employee/schedule" element={<RoleGuard allowedRoles={['admin', 'employee']}><SchedulePage /></RoleGuard>} />
         </Route>
       </Routes>
     </ErrorBoundary>

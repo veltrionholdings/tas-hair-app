@@ -131,10 +131,40 @@ class BookingsApiClient {
     return this.request<Booking>('POST', `/bookings/${id}/cancel`, reason ? { reason } : undefined);
   }
 
+  async completeBooking(id: string) {
+    return this.request<Booking>('POST', `/bookings/${id}/complete`);
+  }
+
+  async noShowBooking(id: string) {
+    return this.request<Booking>('POST', `/bookings/${id}/no-show`);
+  }
+
   // ─── Customers ─────────────────────────────────────────────────────────────
 
   async createCustomer(data: CreateCustomerRequest) {
     return this.request<Customer>('POST', '/customers', data);
+  }
+
+  // ─── Users (Admin) ────────────────────────────────────────────────────────
+
+  async getUsers() {
+    return this.request<{ data: User[] }>('GET', '/users');
+  }
+
+  async inviteUser(data: { email: string; first_name: string; last_name: string; role: 'employee' | 'admin' }) {
+    return this.request<{ message: string; email: string; role: string }>('POST', '/users/invite', data);
+  }
+
+  async suspendUser(userId: string) {
+    return this.request<{ message: string }>('POST', `/users/${userId}/suspend`);
+  }
+
+  async activateUser(userId: string) {
+    return this.request<{ message: string }>('POST', `/users/${userId}/activate`);
+  }
+
+  async deleteUser(userId: string) {
+    return this.request<void>('DELETE', `/users/${userId}`);
   }
 }
 
@@ -236,6 +266,16 @@ export interface Pagination {
   has_more: boolean;
 }
 
+export interface User {
+  id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  role: string;
+  status: string;
+  created_at: string;
+}
+
 // ─── Singleton Instance ───────────────────────────────────────────────────────
 
 export const api = new BookingsApiClient(API_BASE_URL);
@@ -243,8 +283,9 @@ export const api = new BookingsApiClient(API_BASE_URL);
 /**
  * Authenticate with Cognito and store the token.
  * Uses the Cognito InitiateAuth API directly (no SDK needed).
+ * Returns 'NEW_PASSWORD_REQUIRED' if user needs to set a new password.
  */
-export async function authenticate(email: string, password: string): Promise<string> {
+export async function authenticate(email: string, password: string): Promise<string | 'NEW_PASSWORD_REQUIRED'> {
   const url = `https://cognito-idp.${COGNITO_REGION}.amazonaws.com/`;
 
   const response = await fetch(url, {
@@ -269,12 +310,61 @@ export async function authenticate(email: string, password: string): Promise<str
   }
 
   const data = await response.json();
+
+  // Handle NEW_PASSWORD_REQUIRED challenge (invited users with temp password)
+  if (data.ChallengeName === 'NEW_PASSWORD_REQUIRED') {
+    localStorage.setItem('auth_session', data.Session);
+    localStorage.setItem('auth_email', email);
+    return 'NEW_PASSWORD_REQUIRED';
+  }
+
   const token = data.AuthenticationResult.IdToken;
   api.setToken(token);
 
   // Store token in localStorage
   localStorage.setItem('auth_token', token);
   localStorage.setItem('auth_email', email);
+
+  return token;
+}
+
+/**
+ * Complete the NEW_PASSWORD_REQUIRED challenge (set new password for invited users).
+ */
+export async function completeNewPassword(email: string, newPassword: string): Promise<string> {
+  const session = localStorage.getItem('auth_session');
+  if (!session) throw new Error('No active session for password challenge');
+
+  const url = `https://cognito-idp.${COGNITO_REGION}.amazonaws.com/`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-amz-json-1.1',
+      'X-Amz-Target': 'AWSCognitoIdentityProviderService.RespondToAuthChallenge',
+    },
+    body: JSON.stringify({
+      ChallengeName: 'NEW_PASSWORD_REQUIRED',
+      ClientId: COGNITO_CLIENT_ID,
+      Session: session,
+      ChallengeResponses: {
+        USERNAME: email,
+        NEW_PASSWORD: newPassword,
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.message || 'Failed to set new password');
+  }
+
+  const data = await response.json();
+  const token = data.AuthenticationResult.IdToken;
+  api.setToken(token);
+
+  localStorage.setItem('auth_token', token);
+  localStorage.removeItem('auth_session');
 
   return token;
 }
@@ -314,7 +404,33 @@ export async function signUp(
 }
 
 /**
+ * Confirm sign up with the verification code sent to email.
+ */
+export async function confirmSignUp(email: string, code: string): Promise<void> {
+  const url = `https://cognito-idp.${COGNITO_REGION}.amazonaws.com/`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-amz-json-1.1',
+      'X-Amz-Target': 'AWSCognitoIdentityProviderService.ConfirmSignUp',
+    },
+    body: JSON.stringify({
+      ClientId: COGNITO_CLIENT_ID,
+      Username: email,
+      ConfirmationCode: code,
+    }),
+  });
+
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.message || 'Verification failed');
+  }
+}
+
+/**
  * Restore token from localStorage on app load.
+ * Call this ONCE at app startup.
  */
 export function restoreSession(): boolean {
   const token = localStorage.getItem('auth_token');
@@ -331,14 +447,49 @@ export function restoreSession(): boolean {
     }
     localStorage.removeItem('auth_token');
     localStorage.removeItem('auth_email');
+    localStorage.removeItem('auth_role');
   }
   return false;
+}
+
+/**
+ * Check if the user is currently authenticated (valid token exists).
+ * This is safe to call on every render — it has no side effects.
+ */
+export function isAuthenticated(): boolean {
+  const token = localStorage.getItem('auth_token');
+  if (!token) return false;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.exp * 1000 > Date.now();
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Get the current user's role from the stored token.
+ */
+export function getUserRole(): 'admin' | 'employee' | 'customer' | null {
+  const token = localStorage.getItem('auth_token');
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    if (payload.exp * 1000 <= Date.now()) return null;
+    return (payload['custom:role'] as 'admin' | 'employee' | 'customer') || 'customer';
+  } catch {
+    return null;
+  }
 }
 
 export function logout() {
   api.clearToken();
   localStorage.removeItem('auth_token');
   localStorage.removeItem('auth_email');
+  localStorage.removeItem('auth_role');
+  localStorage.removeItem('auth_session');
+  // Force page reload to reset all component state
+  window.location.href = '/';
 }
 
 export function getStoredEmail(): string | null {

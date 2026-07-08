@@ -1,0 +1,199 @@
+.admin-page .page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-xl) 0 var(--space-lg);
+}
+
+/* ─── Invite Form ────────────────────────────────────────────────────────── */
+
+.invite-form {
+  margin-bottom: var(--space-lg);
+}
+
+.invite-form h3 {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: var(--space-md);
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+}
+
+.form-actions {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+  justify-content: flex-end;
+}
+
+/* ─── Staff List ─────────────────────────────────────────────────────────── */
+
+.staff-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.staff-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-lg);
+}
+
+.staff-info {
+  flex: 1;
+  min-width: 150px;
+}
+
+.staff-name {
+  font-weight: 600;
+  font-size: 0.9375rem;
+}
+
+.staff-email {
+  font-size: 0.75rem;
+  color: var(--color-grey);
+}
+
+.staff-meta {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+}
+
+.staff-role {
+  font-size: 0.6875rem;
+  color: var(--color-grey);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.staff-actions {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+/* ─── Small Buttons ──────────────────────────────────────────────────────── */
+
+.btn-small {
+  padding: 4px 10px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  border: 1px solid;
+  background: transparent;
+  transition: all 0.2s ease;
+}
+
+.btn-suspend { color: var(--color-warning); border-color: var(--color-warning); }
+.btn-suspend:hover { background: var(--color-warning); color: white; }
+
+.btn-activate { color: var(--color-success); border-color: var(--color-success); }
+.btn-activate:hover { background: var(--color-success); color: white; }
+
+.btn-delete { color: var(--color-error); border-color: var(--color-error); }
+.btn-delete:hover { background: var(--color-error); color: white; }
+
+.btn-complete { color: var(--color-success); border-color: var(--color-success); }
+.btn-complete:hover { background: var(--color-success); color: white; }
+
+.btn-noshow { color: var(--color-grey); border-color: var(--color-grey); }
+.btn-noshow:hover { background: var(--color-grey-dark); color: white; }
+
+/* ─── Filter Tabs ────────────────────────────────────────────────────────── */
+
+.filter-tabs {
+  display: flex;
+  gap: var(--space-xs);
+  overflow-x: auto;
+  padding-bottom: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.filter-tab {
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-grey-light);
+  color: var(--color-grey-dark);
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.filter-tab.active {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+/* ─── Admin Bookings ─────────────────────────────────────────────────────── */
+
+.admin-bookings-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.admin-booking-card {
+  padding: var(--space-md) var(--space-lg);
+}
+
+.admin-booking-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-sm);
+}
+
+.admin-booking-service {
+  font-weight: 600;
+  font-size: 0.9375rem;
+}
+
+.admin-booking-details {
+  display: flex;
+  gap: var(--space-md);
+  font-size: 0.8125rem;
+  color: var(--color-grey-dark);
+  margin-bottom: var(--space-sm);
+}
+
+.admin-booking-actions {
+  display: flex;
+  gap: var(--space-xs);
+  margin-top: var(--space-sm);
+}
+
+/* ─── Loading / Empty ────────────────────────────────────────────────────── */
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.loading-shimmer {
+  border-radius: var(--radius-md);
+  background: linear-gradient(90deg, var(--color-off-white) 25%, var(--color-grey-light) 50%, var(--color-off-white) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.empty-state {
+  text-align: center;
+  padding: var(--space-2xl) 0;
+  color: var(--color-grey);
+}

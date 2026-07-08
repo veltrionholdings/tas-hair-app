@@ -1,21 +1,19 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { logout, getStoredEmail } from '../api/client';
+import { Navigate } from 'react-router-dom';
+import { logout, getStoredEmail, getUserRole, isAuthenticated } from '../api/client';
 import './ProfilePage.css';
 
 function ProfilePage() {
-  const navigate = useNavigate();
-  const email = getStoredEmail();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const email = getStoredEmail();
+  const role = getUserRole();
 
-  function handleLogout() {
-    logout();
-    navigate('/');
+  if (!isAuthenticated()) {
+    return <Navigate to="/login" replace />;
   }
 
-  if (!email) {
-    navigate('/login');
-    return null;
+  function handleLogout() {
+    logout(); // This reloads the page
   }
 
   return (
@@ -27,11 +25,11 @@ function ProfilePage() {
 
         <div className="profile-card card">
           <div className="profile-avatar">
-            {email.charAt(0).toUpperCase()}
+            {(email || '?').charAt(0).toUpperCase()}
           </div>
           <div className="profile-info">
             <h3>{email}</h3>
-            <span className="profile-role">Customer</span>
+            <span className="profile-role">{role}</span>
           </div>
         </div>
 

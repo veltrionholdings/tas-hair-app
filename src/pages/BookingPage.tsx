@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { api, Service, Resource, AvailableSlot, restoreSession } from '../api/client';
+import { api, Service, Resource, AvailableSlot, isAuthenticated } from '../api/client';
 import './BookingPage.css';
 
 type BookingStep = 'service' | 'stylist' | 'datetime' | 'details' | 'confirm';
@@ -11,8 +11,8 @@ function BookingPage() {
 
   // Auth gate — check if user is logged in, redirect to login if not
   useEffect(() => {
-    if (!restoreSession()) {
-      navigate('/login', { state: { returnTo: '/book' + window.location.search } });
+    if (!isAuthenticated()) {
+      navigate('/login', { state: { returnTo: '/book' + (window.location.search || '') } });
     }
   }, []);
 
@@ -138,7 +138,7 @@ function BookingPage() {
         first_name: firstName,
         last_name: lastName,
         phone: customerPhone,
-        email: customerEmail || undefined,
+        email: customerEmail,
       });
 
       // Create booking
@@ -322,7 +322,14 @@ function BookingPage() {
               <div className="time-slots">
                 <h4>Available Times</h4>
                 <div className="slots-grid">
-                  {slots.map(slot => (
+                  {slots
+                    .filter(slot => {
+                      // Extra client-side filter: hide slots in the past for today
+                      const now = new Date();
+                      const slotDate = new Date(`${selectedDate}T${slot.start_time}:00`);
+                      return slotDate > now;
+                    })
+                    .map(slot => (
                     <button
                       key={slot.start_time}
                       className="slot-btn"
@@ -387,7 +394,7 @@ function BookingPage() {
             </div>
 
             <div className="form-group">
-              <label htmlFor="email">Email (optional)</label>
+              <label htmlFor="email">Email *</label>
               <input
                 id="email"
                 type="email"
@@ -395,6 +402,7 @@ function BookingPage() {
                 placeholder="e.g. thandi@example.com"
                 value={customerEmail}
                 onChange={(e) => setCustomerEmail(e.target.value)}
+                required
               />
             </div>
 
@@ -412,7 +420,7 @@ function BookingPage() {
 
             <button
               className="btn btn-primary btn-full btn-lg"
-              disabled={!customerName.trim() || !customerPhone.trim()}
+              disabled={!customerName.trim() || !customerPhone.trim() || !customerEmail.trim()}
               onClick={() => setStep('confirm')}
             >
               Review Booking

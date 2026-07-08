@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { api, Booking, restoreSession } from '../api/client';
+import { api, Booking, isAuthenticated } from '../api/client';
 import ConfirmModal from '../components/ConfirmModal';
 import './MyBookingsPage.css';
 
@@ -11,7 +11,7 @@ function MyBookingsPage() {
   const [cancellingId, setCancellingId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!restoreSession()) {
+    if (!isAuthenticated()) {
       navigate('/login', { state: { returnTo: '/my-bookings' } });
       return;
     }

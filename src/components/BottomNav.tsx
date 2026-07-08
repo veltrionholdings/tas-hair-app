@@ -1,7 +1,78 @@
 import { NavLink } from 'react-router-dom';
+import { getUserRole } from '../api/client';
 import './BottomNav.css';
 
 function BottomNav() {
+  const role = getUserRole();
+
+  // Admin navigation
+  if (role === 'admin') {
+    return (
+      <nav className="bottom-nav" aria-label="Admin navigation">
+        <NavLink to="/admin/bookings" className="nav-item">
+          <svg className="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+            <line x1="16" y1="2" x2="16" y2="6" />
+            <line x1="8" y1="2" x2="8" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
+          </svg>
+          <span className="nav-label">Bookings</span>
+        </NavLink>
+
+        <NavLink to="/admin/staff" className="nav-item">
+          <svg className="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M23 21v-2a4 4 0 00-3-3.87" />
+            <path d="M16 3.13a4 4 0 010 7.75" />
+          </svg>
+          <span className="nav-label">Staff</span>
+        </NavLink>
+
+        <NavLink to="/admin/services" className="nav-item">
+          <svg className="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" />
+          </svg>
+          <span className="nav-label">Services</span>
+        </NavLink>
+
+        <NavLink to="/profile" className="nav-item">
+          <svg className="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+          <span className="nav-label">Profile</span>
+        </NavLink>
+      </nav>
+    );
+  }
+
+  // Employee navigation
+  if (role === 'employee') {
+    return (
+      <nav className="bottom-nav" aria-label="Employee navigation">
+        <NavLink to="/employee/schedule" className="nav-item">
+          <svg className="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+            <line x1="16" y1="2" x2="16" y2="6" />
+            <line x1="8" y1="2" x2="8" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
+          </svg>
+          <span className="nav-label">Schedule</span>
+        </NavLink>
+
+        <NavLink to="/profile" className="nav-item">
+          <svg className="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+          <span className="nav-label">Profile</span>
+        </NavLink>
+      </nav>
+    );
+  }
+
+  // Customer navigation (default)
   return (
     <nav className="bottom-nav" aria-label="Main navigation">
       <NavLink to="/" className="nav-item" end>

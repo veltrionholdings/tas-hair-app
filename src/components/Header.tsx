@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom';
-import { restoreSession, getStoredEmail } from '../api/client';
+import { isAuthenticated } from '../api/client';
 import './Header.css';
 
 function Header() {
-  const isLoggedIn = !!getStoredEmail() && restoreSession();
+  const loggedIn = isAuthenticated();
 
   return (
     <header className="header">
@@ -36,7 +36,7 @@ function Header() {
         </div>
       </Link>
 
-      <Link to={isLoggedIn ? '/profile' : '/login'} className="header-profile" aria-label="Profile">
+      <Link to={loggedIn ? '/profile' : '/login'} className="header-profile" aria-label="Profile">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="header-profile-icon">
           <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
           <circle cx="12" cy="7" r="4" />
