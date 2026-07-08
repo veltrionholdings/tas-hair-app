@@ -3,30 +3,6 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { api, Service, Resource, AvailableSlot } from '../api/client';
 import './BookingPage.css';
 
-// Demo data
-const DEMO_SERVICES: Service[] = [
-  { id: '1', name: 'Pixie Cut', description: null, duration_minutes: 45, buffer_minutes: 10, capacity: 1, price_cents: 25000, currency: 'ZAR', is_active: true, metadata: {} },
-  { id: '2', name: 'Bob Cut', description: null, duration_minutes: 60, buffer_minutes: 10, capacity: 1, price_cents: 30000, currency: 'ZAR', is_active: true, metadata: {} },
-  { id: '3', name: 'Platinum Colour', description: null, duration_minutes: 180, buffer_minutes: 15, capacity: 1, price_cents: 80000, currency: 'ZAR', is_active: true, metadata: {} },
-  { id: '4', name: 'Microrings Extensions', description: null, duration_minutes: 240, buffer_minutes: 15, capacity: 1, price_cents: 150000, currency: 'ZAR', is_active: true, metadata: {} },
-  { id: '5', name: 'Hair Colour (Standard)', description: null, duration_minutes: 90, buffer_minutes: 15, capacity: 1, price_cents: 45000, currency: 'ZAR', is_active: true, metadata: {} },
-  { id: '6', name: 'Wash & Style', description: null, duration_minutes: 30, buffer_minutes: 5, capacity: 1, price_cents: 15000, currency: 'ZAR', is_active: true, metadata: {} },
-];
-
-const DEMO_STYLISTS: Resource[] = [
-  { id: 'r1', name: 'Tas', description: 'Senior Stylist & Owner', resource_type_id: 'rt1', is_active: true, metadata: {} },
-];
-
-const DEMO_SLOTS: AvailableSlot[] = [
-  { start_time: '09:00', end_time: '09:45', resources: [{ id: 'r1', name: 'Tas' }] },
-  { start_time: '10:00', end_time: '10:45', resources: [{ id: 'r1', name: 'Tas' }] },
-  { start_time: '11:00', end_time: '11:45', resources: [{ id: 'r1', name: 'Tas' }] },
-  { start_time: '13:00', end_time: '13:45', resources: [{ id: 'r1', name: 'Tas' }] },
-  { start_time: '14:00', end_time: '14:45', resources: [{ id: 'r1', name: 'Tas' }] },
-  { start_time: '15:00', end_time: '15:45', resources: [{ id: 'r1', name: 'Tas' }] },
-  { start_time: '16:00', end_time: '16:45', resources: [{ id: 'r1', name: 'Tas' }] },
-];
-
 type BookingStep = 'service' | 'stylist' | 'datetime' | 'details' | 'confirm';
 
 function BookingPage() {
@@ -34,10 +10,13 @@ function BookingPage() {
   const navigate = useNavigate();
 
   const [step, setStep] = useState<BookingStep>('service');
-  const [services, setServices] = useState<Service[]>(DEMO_SERVICES);
-  const [stylists, setStylists] = useState<Resource[]>(DEMO_STYLISTS);
+  const [services, setServices] = useState<Service[]>([]);
+  const [stylists, setStylists] = useState<Resource[]>([]);
   const [slots, setSlots] = useState<AvailableSlot[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [bookingLoading, setBookingLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   // Selections
   const [selectedService, setSelectedService] = useState<Service | null>(null);
@@ -50,59 +29,70 @@ function BookingPage() {
   const [customerEmail, setCustomerEmail] = useState('');
   const [notes, setNotes] = useState('');
 
+  // Load services on mount
+  useEffect(() => {
+    loadServices();
+  }, []);
+
   // Pre-select service from URL
   useEffect(() => {
     const serviceId = searchParams.get('service');
-    if (serviceId) {
+    if (serviceId && services.length > 0) {
       const service = services.find(s => s.id === serviceId);
       if (service) {
         setSelectedService(service);
+        loadStylists();
         setStep('stylist');
       }
     }
   }, [searchParams, services]);
 
-  // Load services from API
+  // Load availability when date changes
   useEffect(() => {
-    loadServices();
-  }, []);
+    if (step === 'datetime' && selectedDate && selectedService) {
+      loadAvailability();
+    }
+  }, [selectedDate]);
 
   async function loadServices() {
     try {
+      setLoading(true);
       const result = await api.getServices({ is_active: true });
-      if (result.data.length > 0) setServices(result.data);
-    } catch { /* use demo data */ }
-  }
-
-  async function loadStylists() {
-    try {
-      const result = await api.getResources({ is_active: true });
-      if (result.data.length > 0) setStylists(result.data);
-    } catch { /* use demo data */ }
-  }
-
-  async function loadAvailability() {
-    if (!selectedService || !selectedDate) return;
-    setLoading(true);
-    try {
-      const resourceId = anyAvailable ? undefined : selectedStylist?.id;
-      const result = await api.getAvailability(selectedService.id, selectedDate, resourceId);
-      setSlots(result.slots);
+      setServices(result.data);
     } catch {
-      setSlots(DEMO_SLOTS);
+      setErrorMessage('Unable to load services. Please try again.');
     } finally {
       setLoading(false);
     }
   }
 
-  useEffect(() => {
-    if (step === 'datetime' && selectedDate) {
-      loadAvailability();
+  async function loadStylists() {
+    try {
+      const result = await api.getResources({ is_active: true });
+      setStylists(result.data);
+    } catch {
+      // Stylists will show as empty — user can still pick "Any Available"
     }
-  }, [step, selectedDate]);
+  }
+
+  async function loadAvailability() {
+    if (!selectedService || !selectedDate) return;
+    setSlotsLoading(true);
+    setSlots([]);
+    try {
+      const resourceId = anyAvailable ? undefined : selectedStylist?.id;
+      const result = await api.getAvailability(selectedService.id, selectedDate, resourceId);
+      setSlots(result.slots);
+    } catch {
+      setSlots([]);
+    } finally {
+      setSlotsLoading(false);
+    }
+  }
 
   function handleSelectService(service: Service) {
     setSelectedService(service);
+    setErrorMessage('');
     loadStylists();
     setStep('stylist');
   }
@@ -130,10 +120,11 @@ function BookingPage() {
   async function handleConfirmBooking() {
     if (!selectedService || !selectedSlot || !customerName || !customerPhone) return;
 
-    setLoading(true);
+    setBookingLoading(true);
+    setErrorMessage('');
     try {
-      // Create customer first
-      const [firstName, ...lastParts] = customerName.split(' ');
+      // Create customer
+      const [firstName, ...lastParts] = customerName.trim().split(' ');
       const lastName = lastParts.join(' ') || firstName;
 
       const customer = await api.createCustomer({
@@ -147,7 +138,7 @@ function BookingPage() {
       const startTime = `${selectedDate}T${selectedSlot.start_time}:00`;
       await api.createBooking({
         service_id: selectedService.id,
-        resource_id: anyAvailable ? null : (selectedStylist?.id || null),
+        resource_id: anyAvailable ? null : (selectedStylist?.id || selectedSlot.resources[0]?.id || null),
         customer_id: customer.id,
         start_time: startTime,
         party_size: 1,
@@ -155,11 +146,15 @@ function BookingPage() {
       });
 
       navigate('/booking-confirmed');
-    } catch {
-      // Demo mode: just navigate to confirmation
-      navigate('/booking-confirmed');
+    } catch (err: any) {
+      if (err?.code === 'CONFLICT') {
+        setErrorMessage('This time slot was just taken. Please select another time.');
+        setStep('datetime');
+      } else {
+        setErrorMessage('Something went wrong. Please try again.');
+      }
     } finally {
-      setLoading(false);
+      setBookingLoading(false);
     }
   }
 
@@ -178,6 +173,19 @@ function BookingPage() {
   function formatDate(dateStr: string): string {
     const date = new Date(dateStr + 'T12:00:00');
     return date.toLocaleDateString('en-ZA', { weekday: 'long', day: 'numeric', month: 'long' });
+  }
+
+  if (loading) {
+    return (
+      <div className="page booking-page">
+        <div className="container" style={{ paddingTop: '2rem', textAlign: 'center' }}>
+          <div className="loading-shimmer" style={{ height: 40, width: '60%', margin: '0 auto 1rem' }} />
+          <div className="loading-shimmer" style={{ height: 50, marginBottom: '0.5rem' }} />
+          <div className="loading-shimmer" style={{ height: 50, marginBottom: '0.5rem' }} />
+          <div className="loading-shimmer" style={{ height: 50 }} />
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -205,6 +213,13 @@ function BookingPage() {
             <span className="progress-label">Details</span>
           </div>
         </div>
+
+        {/* Error message */}
+        {errorMessage && (
+          <div className="error-banner">
+            <span>⚠️</span> {errorMessage}
+          </div>
+        )}
 
         {/* Step: Select Service */}
         {step === 'service' && (
@@ -262,7 +277,7 @@ function BookingPage() {
                 </button>
               ))}
             </div>
-            <button className="btn-back" onClick={() => setStep('service')}>
+            <button className="btn-back" onClick={() => { setStep('service'); setSelectedService(null); }}>
               ← Back
             </button>
           </div>
@@ -289,9 +304,14 @@ function BookingPage() {
               )}
             </div>
 
-            {loading && <div className="loading-spinner">Loading availability...</div>}
+            {slotsLoading && (
+              <div className="loading-spinner">
+                <div className="spinner" />
+                <span>Checking availability...</span>
+              </div>
+            )}
 
-            {!loading && slots.length > 0 && (
+            {!slotsLoading && slots.length > 0 && (
               <div className="time-slots">
                 <h4>Available Times</h4>
                 <div className="slots-grid">
@@ -308,7 +328,7 @@ function BookingPage() {
               </div>
             )}
 
-            {!loading && selectedDate && slots.length === 0 && (
+            {!slotsLoading && selectedDate && slots.length === 0 && (
               <div className="no-slots">
                 <p>No available slots on this date. Try another day.</p>
               </div>
@@ -385,7 +405,7 @@ function BookingPage() {
 
             <button
               className="btn btn-primary btn-full btn-lg"
-              disabled={!customerName || !customerPhone}
+              disabled={!customerName.trim() || !customerPhone.trim()}
               onClick={() => setStep('confirm')}
             >
               Review Booking
@@ -410,7 +430,7 @@ function BookingPage() {
               <div className="confirm-row">
                 <span className="confirm-label">Stylist</span>
                 <span className="confirm-value">
-                  {anyAvailable ? 'Any Available' : selectedStylist?.name}
+                  {anyAvailable ? 'Any Available' : (selectedStylist?.name || selectedSlot?.resources[0]?.name)}
                 </span>
               </div>
               <div className="confirm-row">
@@ -448,12 +468,12 @@ function BookingPage() {
             <button
               className="btn btn-primary btn-full btn-lg"
               onClick={handleConfirmBooking}
-              disabled={loading}
+              disabled={bookingLoading}
             >
-              {loading ? 'Booking...' : 'Confirm Booking'}
+              {bookingLoading ? 'Booking...' : 'Confirm Booking'}
             </button>
 
-            <button className="btn-back" onClick={() => setStep('details')}>
+            <button className="btn-back" onClick={() => setStep('details')} disabled={bookingLoading}>
               ← Back
             </button>
           </div>

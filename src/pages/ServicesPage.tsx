@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { api, Service } from '../api/client';
 import './ServicesPage.css';
 
-// Demo data used when API is not yet connected
+// Fallback demo data used when API is not yet connected
 const DEMO_SERVICES: Service[] = [
   { id: '1', name: 'Pixie Cut', description: 'Precision short cut tailored to your face shape', duration_minutes: 45, buffer_minutes: 10, capacity: 1, price_cents: 25000, currency: 'ZAR', is_active: true, metadata: {} },
   { id: '2', name: 'Bob Cut', description: 'Classic bob cut with clean lines and movement', duration_minutes: 60, buffer_minutes: 10, capacity: 1, price_cents: 30000, currency: 'ZAR', is_active: true, metadata: {} },
@@ -15,8 +15,8 @@ const DEMO_SERVICES: Service[] = [
 ];
 
 function ServicesPage() {
-  const [services, setServices] = useState<Service[]>(DEMO_SERVICES);
-  const [_loading, setLoading] = useState(false);
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadServices();
@@ -26,17 +26,15 @@ function ServicesPage() {
     try {
       setLoading(true);
       const result = await api.getServices({ is_active: true });
-      if (result.data.length > 0) {
-        setServices(result.data);
-      }
+      setServices(result.data.length > 0 ? result.data : DEMO_SERVICES);
     } catch {
-      // Fall back to demo data
+      setServices(DEMO_SERVICES);
     } finally {
       setLoading(false);
     }
   }
 
-  function formatPrice(cents: number | null, _currency: string | null): string {
+  function formatPrice(cents: number | null): string {
     if (cents === null) return 'Price on request';
     const amount = cents / 100;
     return `R${amount.toFixed(0)}`;
@@ -47,6 +45,24 @@ function ServicesPage() {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
+  }
+
+  if (loading) {
+    return (
+      <div className="page services-page">
+        <div className="container">
+          <div className="page-header">
+            <h1>Our Services</h1>
+            <p>Expert hair services tailored to you</p>
+          </div>
+          <div className="loading-state">
+            <div className="loading-shimmer" />
+            <div className="loading-shimmer" />
+            <div className="loading-shimmer" />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -63,7 +79,7 @@ function ServicesPage() {
               <div className="service-card-header">
                 <h3>{service.name}</h3>
                 <span className="service-price">
-                  {formatPrice(service.price_cents, service.currency)}
+                  {formatPrice(service.price_cents)}
                 </span>
               </div>
               {service.description && (

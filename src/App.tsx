@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { restoreSession } from './api/client';
+import { authenticate, restoreSession } from './api/client';
 import Layout from './components/Layout';
 import HomePage from './pages/HomePage';
 import ServicesPage from './pages/ServicesPage';
@@ -10,9 +10,39 @@ import MyBookingsPage from './pages/MyBookingsPage';
 import ContactPage from './pages/ContactPage';
 
 function App() {
+  const [ready, setReady] = useState(false);
+
   useEffect(() => {
-    restoreSession();
+    initAuth();
   }, []);
+
+  async function initAuth() {
+    // Try restoring an existing session first
+    if (restoreSession()) {
+      setReady(true);
+      return;
+    }
+
+    // Auto-authenticate with demo credentials for the demo
+    // In production, this would be replaced with a real login flow
+    try {
+      await authenticate('admin@tashair.test', 'TasHair2025!');
+    } catch {
+      // If auth fails, the app still works with demo/fallback data
+    }
+    setReady(true);
+  }
+
+  if (!ready) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100dvh' }}>
+        <div style={{ textAlign: 'center', color: '#7B2D8B' }}>
+          <div style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>💇‍♀️</div>
+          <p style={{ fontSize: '0.875rem' }}>Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Routes>
