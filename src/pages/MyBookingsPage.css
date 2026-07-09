@@ -132,3 +132,36 @@
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+
+.section-title {
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-grey);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: var(--space-sm);
+}
+
+.btn-rebook {
+  display: inline-block;
+  margin-top: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  font-size: 0.8125rem;
+  color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.btn-rebook:hover {
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+.modal-btn-danger {
+  background: var(--color-error) !important;
+  border-color: var(--color-error) !important;
+}

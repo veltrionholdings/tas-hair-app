@@ -87,10 +87,14 @@ function AdminDashboardPage() {
         {/* Quick links */}
         <div className="dashboard-links" style={{ marginTop: '1.5rem' }}>
           <Link to="/admin/bookings" className="btn btn-secondary btn-full" style={{ marginBottom: '0.5rem' }}>View All Bookings</Link>
-          <Link to="/admin/users" className="btn btn-secondary btn-full" style={{ marginBottom: '0.5rem' }}>Manage Users</Link>
+          <Link to="/admin/new-booking" className="btn btn-secondary btn-full" style={{ marginBottom: '0.5rem' }}>📝 Book for a Customer</Link>
+          <Link to="/admin/quick-actions" className="btn btn-secondary btn-full" style={{ marginBottom: '0.5rem' }}>⚡ Quick Actions</Link>
+          <Link to="/admin/customers" className="btn btn-secondary btn-full" style={{ marginBottom: '0.5rem' }}>🔍 Search Customers</Link>
+          <Link to="/admin/users" className="btn btn-secondary btn-full" style={{ marginBottom: '0.5rem' }}>Manage Staff & Users</Link>
           <Link to="/admin/services" className="btn btn-secondary btn-full" style={{ marginBottom: '0.5rem' }}>Manage Services</Link>
-          <Link to="/admin/resources" className="btn btn-secondary btn-full" style={{ marginBottom: '0.5rem' }}>Manage Stylists</Link>
-          <Link to="/admin/settings" className="btn btn-secondary btn-full">Settings</Link>
+          <Link to="/admin/reports" className="btn btn-secondary btn-full" style={{ marginBottom: '0.5rem' }}>📊 Reports</Link>
+          <Link to="/admin/business" className="btn btn-secondary btn-full" style={{ marginBottom: '0.5rem' }}>🏪 Business Profile</Link>
+          <Link to="/admin/settings" className="btn btn-secondary btn-full">⚙️ Settings</Link>
         </div>
       </div>
     </div>

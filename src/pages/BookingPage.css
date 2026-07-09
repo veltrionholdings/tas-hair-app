@@ -386,3 +386,17 @@
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+
+/* ─── Favourite Stylist ──────────────────────────────────────────────────── */
+
+.booking-option-fav {
+  border-color: var(--color-primary) !important;
+  background: rgba(123, 45, 139, 0.03) !important;
+}
+
+.fav-btn {
+  font-size: 1.25rem;
+  padding: 4px;
+  line-height: 1;
+  flex-shrink: 0;
+}

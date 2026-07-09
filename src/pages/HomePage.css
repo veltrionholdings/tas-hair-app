@@ -60,3 +60,52 @@
 .hero .btn-primary:hover {
   background: var(--color-off-white);
 }
+
+/* ─── Next Appointment Banner ────────────────────────────────────────────── */
+
+.next-appointment {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md) var(--space-lg);
+  background: var(--color-white);
+  border-bottom: 1px solid var(--color-grey-light);
+  border-left: 4px solid var(--color-primary);
+}
+
+.next-appointment-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.next-appointment-label {
+  font-size: 0.6875rem;
+  color: var(--color-grey);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.next-appointment-service {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-black);
+}
+
+.next-appointment-time {
+  font-size: 0.8125rem;
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+.next-appointment-stylist {
+  font-size: 0.75rem;
+  color: var(--color-grey);
+}
+
+.next-appointment-link {
+  font-size: 0.8125rem;
+  color: var(--color-primary);
+  font-weight: 500;
+  text-decoration: none;
+}

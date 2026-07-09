@@ -498,6 +498,56 @@ export async function confirmSignUp(email: string, code: string): Promise<void> 
 }
 
 /**
+ * Initiate forgot password flow — sends a reset code to the user's email.
+ */
+export async function forgotPassword(email: string): Promise<void> {
+  const url = `https://cognito-idp.${COGNITO_REGION}.amazonaws.com/`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-amz-json-1.1',
+      'X-Amz-Target': 'AWSCognitoIdentityProviderService.ForgotPassword',
+    },
+    body: JSON.stringify({
+      ClientId: COGNITO_CLIENT_ID,
+      Username: email,
+    }),
+  });
+
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.message || 'Failed to send reset code');
+  }
+}
+
+/**
+ * Confirm forgot password — set a new password using the reset code.
+ */
+export async function confirmForgotPassword(email: string, code: string, newPassword: string): Promise<void> {
+  const url = `https://cognito-idp.${COGNITO_REGION}.amazonaws.com/`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-amz-json-1.1',
+      'X-Amz-Target': 'AWSCognitoIdentityProviderService.ConfirmForgotPassword',
+    },
+    body: JSON.stringify({
+      ClientId: COGNITO_CLIENT_ID,
+      Username: email,
+      ConfirmationCode: code,
+      Password: newPassword,
+    }),
+  });
+
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.message || 'Failed to reset password');
+  }
+}
+
+/**
  * Decode a base64url-encoded string (JWT tokens use base64url, not standard base64).
  */
 function decodeBase64Url(str: string): string {

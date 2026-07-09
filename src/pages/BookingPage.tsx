@@ -260,20 +260,32 @@ function BookingPage() {
                   <span className="booking-option-meta">First available stylist</span>
                 </div>
               </button>
-              {stylists.map(stylist => (
-                <button
-                  key={stylist.id}
-                  className="booking-option"
-                  onClick={() => handleSelectStylist(stylist)}
-                >
-                  <div className="booking-option-info">
-                    <span className="booking-option-name">{stylist.name}</span>
-                    {stylist.description && (
-                      <span className="booking-option-meta">{stylist.description}</span>
-                    )}
-                  </div>
-                </button>
-              ))}
+              {stylists.map(stylist => {
+                const isFav = localStorage.getItem('fav_stylist') === stylist.id;
+                return (
+                  <button
+                    key={stylist.id}
+                    className={`booking-option ${isFav ? 'booking-option-fav' : ''}`}
+                    onClick={() => handleSelectStylist(stylist)}
+                  >
+                    <div className="booking-option-info">
+                      <span className="booking-option-name">
+                        {stylist.name} {isFav && '⭐'}
+                      </span>
+                      {stylist.description && (
+                        <span className="booking-option-meta">{stylist.description}</span>
+                      )}
+                    </div>
+                    <button
+                      className="fav-btn"
+                      onClick={(e) => { e.stopPropagation(); if (isFav) localStorage.removeItem('fav_stylist'); else localStorage.setItem('fav_stylist', stylist.id); window.location.reload(); }}
+                      aria-label={isFav ? 'Remove favourite' : 'Set as favourite'}
+                    >
+                      {isFav ? '❤️' : '🤍'}
+                    </button>
+                  </button>
+                );
+              })}
             </div>
             <button className="btn-back" onClick={() => { setStep('service'); setSelectedService(null); }}>
               ← Back

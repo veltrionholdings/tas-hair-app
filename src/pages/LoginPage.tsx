@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { authenticate, signUp, confirmSignUp, completeNewPassword, getUserRole, ensureCustomerRecord } from '../api/client';
+import { authenticate, signUp, confirmSignUp, completeNewPassword, getUserRole, ensureCustomerRecord, forgotPassword, confirmForgotPassword } from '../api/client';
 import './LoginPage.css';
 
-type LoginMode = 'login' | 'signup' | 'new-password' | 'verify';
+type LoginMode = 'login' | 'signup' | 'new-password' | 'verify' | 'forgot' | 'reset';
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -19,6 +19,7 @@ function LoginPage() {
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
+  const [resetCode, setResetCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -30,7 +31,7 @@ function LoginPage() {
     } else if (role === 'admin') {
       navigate('/admin');
     } else if (role === 'employee') {
-      navigate('/employee/schedule');
+      navigate('/employee');
     } else {
       navigate('/');
     }
@@ -116,6 +117,35 @@ function LoginPage() {
     }
   }
 
+  async function handleForgotPassword(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email) return;
+    setLoading(true); setErrorMessage('');
+    try {
+      await forgotPassword(email);
+      setSuccessMessage('Reset code sent to your email.');
+      setMode('reset');
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Failed to send reset code.');
+    } finally { setLoading(false); }
+  }
+
+  async function handleResetPassword(e: React.FormEvent) {
+    e.preventDefault();
+    if (!resetCode || !newPassword || !confirmPassword) return;
+    if (newPassword !== confirmPassword) { setErrorMessage('Passwords do not match.'); return; }
+    if (newPassword.length < 8) { setErrorMessage('Password must be at least 8 characters.'); return; }
+    setLoading(true); setErrorMessage('');
+    try {
+      await confirmForgotPassword(email, resetCode, newPassword);
+      setSuccessMessage('Password reset! You can now sign in.');
+      setMode('login');
+      setResetCode(''); setNewPassword(''); setConfirmPassword('');
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Failed to reset password.');
+    } finally { setLoading(false); }
+  }
+
   return (
     <div className="page login-page">
       <div className="container">
@@ -125,12 +155,16 @@ function LoginPage() {
             {mode === 'signup' && 'Create Account'}
             {mode === 'new-password' && 'Set New Password'}
             {mode === 'verify' && 'Verify Email'}
+            {mode === 'forgot' && 'Forgot Password'}
+            {mode === 'reset' && 'Reset Password'}
           </h1>
           <p>
             {mode === 'login' && 'Sign in to book your appointment'}
             {mode === 'signup' && 'Create an account to get started'}
             {mode === 'new-password' && 'Please set a new password for your account'}
             {mode === 'verify' && 'Enter the verification code sent to your email'}
+            {mode === 'forgot' && 'Enter your email and we\'ll send you a reset code'}
+            {mode === 'reset' && 'Enter the code from your email and choose a new password'}
           </p>
         </div>
 
@@ -150,6 +184,46 @@ function LoginPage() {
             </div>
             <button type="submit" className="btn btn-primary btn-full btn-lg" disabled={loading}>
               {loading ? 'Signing in...' : 'Sign In'}
+            </button>
+            <button type="button" className="link-btn" style={{ display: 'block', margin: '1rem auto 0', fontSize: '0.8125rem' }} onClick={() => { setMode('forgot'); setErrorMessage(''); setSuccessMessage(''); }}>
+              Forgot Password?
+            </button>
+          </form>
+        )}
+
+        {/* Forgot Password */}
+        {mode === 'forgot' && (
+          <form onSubmit={handleForgotPassword} className="login-form">
+            <div className="form-group">
+              <label htmlFor="forgot-email">Email</label>
+              <input id="forgot-email" type="email" className="form-input" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" />
+            </div>
+            <button type="submit" className="btn btn-primary btn-full btn-lg" disabled={loading}>
+              {loading ? 'Sending...' : 'Send Reset Code'}
+            </button>
+            <button type="button" className="link-btn" style={{ display: 'block', margin: '1rem auto 0', fontSize: '0.8125rem' }} onClick={() => setMode('login')}>
+              Back to Sign In
+            </button>
+          </form>
+        )}
+
+        {/* Reset Password */}
+        {mode === 'reset' && (
+          <form onSubmit={handleResetPassword} className="login-form">
+            <div className="form-group">
+              <label htmlFor="reset-code">Reset Code</label>
+              <input id="reset-code" type="text" className="form-input" placeholder="6-digit code" value={resetCode} onChange={e => setResetCode(e.target.value)} required autoComplete="one-time-code" inputMode="numeric" />
+            </div>
+            <div className="form-group">
+              <label htmlFor="reset-pw">New Password</label>
+              <input id="reset-pw" type="password" className="form-input" placeholder="At least 8 characters" value={newPassword} onChange={e => setNewPassword(e.target.value)} required autoComplete="new-password" />
+            </div>
+            <div className="form-group">
+              <label htmlFor="reset-confirm">Confirm Password</label>
+              <input id="reset-confirm" type="password" className="form-input" placeholder="••••••••" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required autoComplete="new-password" />
+            </div>
+            <button type="submit" className="btn btn-primary btn-full btn-lg" disabled={loading}>
+              {loading ? 'Resetting...' : 'Reset Password'}
             </button>
           </form>
         )}
@@ -219,7 +293,7 @@ function LoginPage() {
           </form>
         )}
 
-        {mode !== 'new-password' && mode !== 'verify' && (
+        {mode !== 'new-password' && mode !== 'verify' && mode !== 'forgot' && mode !== 'reset' && (
           <div className="login-switch">
             {mode === 'login' ? (
               <p>Don't have an account? <button className="link-btn" onClick={() => { setMode('signup'); setErrorMessage(''); setSuccessMessage(''); }}>Sign up</button></p>

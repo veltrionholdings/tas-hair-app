@@ -14,6 +14,7 @@ function AdminServicesPage() {
   const [duration, setDuration] = useState('');
   const [buffer, setBuffer] = useState('10');
   const [price, setPrice] = useState('');
+  const [category, setCategory] = useState('');
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -30,7 +31,7 @@ function AdminServicesPage() {
 
   function openAdd() {
     setEditingId(null);
-    setName(''); setDescription(''); setDuration(''); setBuffer('10'); setPrice('');
+    setName(''); setDescription(''); setDuration(''); setBuffer('10'); setPrice(''); setCategory('');
     setShowForm(true);
   }
 
@@ -41,6 +42,7 @@ function AdminServicesPage() {
     setDuration(String(svc.duration_minutes));
     setBuffer(String(svc.buffer_minutes));
     setPrice(svc.price_cents ? String(svc.price_cents / 100) : '');
+    setCategory((svc.metadata as any)?.category || '');
     setShowForm(true);
   }
 
@@ -147,6 +149,10 @@ function AdminServicesPage() {
               <div className="form-group">
                 <label>Price (ZAR)</label>
                 <input type="number" className="form-input" value={price} onChange={e => setPrice(e.target.value)} min="0" />
+              </div>
+              <div className="form-group">
+                <label>Category</label>
+                <input type="text" className="form-input" value={category} onChange={e => setCategory(e.target.value)} placeholder="e.g. Cuts, Colour, Treatments" />
               </div>
               <div className="form-actions">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>

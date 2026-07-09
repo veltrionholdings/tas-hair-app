@@ -65,12 +65,12 @@ function ServicesPage() {
         <div className="services-list">
           {services.map((service) => (
             <div key={service.id} className="service-card card">
-              <div className="service-card-header">
+              <Link to={`/services/${service.id}`} className="service-card-header" style={{ textDecoration: 'none' }}>
                 <h3>{service.name}</h3>
                 <span className="service-price">
                   {formatPrice(service.price_cents)}
                 </span>
-              </div>
+              </Link>
               {service.description && (
                 <p className="service-description">{service.description}</p>
               )}
