@@ -404,6 +404,8 @@ function CalendarView({ bookings }: CalendarViewProps) {
     booking: Booking;
     top: number;
     height: number;
+    startMin: number;
+    endMin: number;
     column: number;
     totalColumns: number;
   }
@@ -411,11 +413,9 @@ function CalendarView({ bookings }: CalendarViewProps) {
   function calculatePositions(): SlotPosition[] {
     if (bookings.length === 0) return [];
 
-    // Sort by start time
     const sorted = [...bookings].sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
 
-    // Calculate raw positions
-    const items = sorted.map(booking => {
+    const items: SlotPosition[] = sorted.map(booking => {
       const start = parseTime(booking.start_time_local || booking.start_time);
       const end = parseTime(booking.end_time_local || booking.end_time);
       const topMinutes = (start.hour - START_HOUR) * 60 + start.min;
@@ -425,43 +425,48 @@ function CalendarView({ bookings }: CalendarViewProps) {
         top: topMinutes * PX_PER_MINUTE,
         height: Math.max(durationMinutes * PX_PER_MINUTE, 45),
         startMin: topMinutes,
-        endMin: topMinutes + durationMinutes,
+        endMin: topMinutes + Math.max(durationMinutes, 30),
         column: 0,
         totalColumns: 1,
       };
     });
 
-    // Find overlapping groups and assign columns
+    // Assign columns: for each item, find which columns are taken by overlapping items before it
     for (let i = 0; i < items.length; i++) {
-      // Find all items that overlap with this one
-      const overlapping = items.filter((other, j) =>
-        j !== i && other.startMin < items[i].endMin && other.endMin > items[i].startMin
-      );
-
-      if (overlapping.length > 0) {
-        // Collect this item + all overlapping into a group
-        const group = [items[i], ...overlapping];
-        const usedColumns = new Set(group.filter((_, idx) => idx < group.indexOf(items[i])).map(g => g.column));
-
-        // Assign first available column
-        let col = 0;
-        while (usedColumns.has(col)) col++;
-        items[i].column = col;
-
-        // Set total columns for the group
-        const totalCols = Math.max(...group.map(g => g.column)) + 1;
-        group.forEach(g => { if (g.totalColumns < totalCols) g.totalColumns = totalCols; });
+      const takenColumns = new Set<number>();
+      for (let j = 0; j < i; j++) {
+        // Check if j overlaps with i
+        if (items[j].startMin < items[i].endMin && items[j].endMin > items[i].startMin) {
+          takenColumns.add(items[j].column);
+        }
       }
+      // Assign the first free column
+      let col = 0;
+      while (takenColumns.has(col)) col++;
+      items[i].column = col;
     }
 
-    // Second pass: ensure totalColumns is consistent within each overlap group
+    // Calculate totalColumns for each overlap group
     for (let i = 0; i < items.length; i++) {
-      const overlapping = items.filter((other, j) =>
-        j !== i && other.startMin < items[i].endMin && other.endMin > items[i].startMin
-      );
-      const maxCols = Math.max(items[i].totalColumns, ...overlapping.map(o => o.totalColumns));
-      items[i].totalColumns = maxCols;
-      overlapping.forEach(o => { o.totalColumns = maxCols; });
+      // Find all items overlapping with this one (including itself)
+      const groupColumns = new Set<number>([items[i].column]);
+      for (let j = 0; j < items.length; j++) {
+        if (j !== i && items[j].startMin < items[i].endMin && items[j].endMin > items[i].startMin) {
+          groupColumns.add(items[j].column);
+        }
+      }
+      items[i].totalColumns = Math.max(items[i].totalColumns, groupColumns.size);
+    }
+
+    // Ensure all overlapping items share the same totalColumns
+    for (let i = 0; i < items.length; i++) {
+      for (let j = 0; j < items.length; j++) {
+        if (j !== i && items[j].startMin < items[i].endMin && items[j].endMin > items[i].startMin) {
+          const max = Math.max(items[i].totalColumns, items[j].totalColumns);
+          items[i].totalColumns = max;
+          items[j].totalColumns = max;
+        }
+      }
     }
 
     return items;
