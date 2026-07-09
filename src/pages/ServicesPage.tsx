@@ -3,17 +3,6 @@ import { Link } from 'react-router-dom';
 import { api, Service } from '../api/client';
 import './ServicesPage.css';
 
-// Fallback demo data used when API is not yet connected
-const DEMO_SERVICES: Service[] = [
-  { id: '1', name: 'Pixie Cut', description: 'Precision short cut tailored to your face shape', duration_minutes: 45, buffer_minutes: 10, capacity: 1, price_cents: 25000, currency: 'ZAR', is_active: true, metadata: {} },
-  { id: '2', name: 'Bob Cut', description: 'Classic bob cut with clean lines and movement', duration_minutes: 60, buffer_minutes: 10, capacity: 1, price_cents: 30000, currency: 'ZAR', is_active: true, metadata: {} },
-  { id: '3', name: 'Platinum Colour', description: 'Full platinum blonde transformation', duration_minutes: 180, buffer_minutes: 15, capacity: 1, price_cents: 80000, currency: 'ZAR', is_active: true, metadata: {} },
-  { id: '4', name: 'Microrings Extensions', description: 'Seamless strand-by-strand extensions using micro rings', duration_minutes: 240, buffer_minutes: 15, capacity: 1, price_cents: 150000, currency: 'ZAR', is_active: true, metadata: {} },
-  { id: '5', name: 'Hair Colour (Standard)', description: 'Single process colour application', duration_minutes: 90, buffer_minutes: 15, capacity: 1, price_cents: 45000, currency: 'ZAR', is_active: true, metadata: {} },
-  { id: '6', name: 'Wash & Style', description: 'Shampoo, condition, and blow-dry styling', duration_minutes: 30, buffer_minutes: 5, capacity: 1, price_cents: 15000, currency: 'ZAR', is_active: true, metadata: {} },
-  { id: '7', name: 'Hair Treatment', description: 'Deep conditioning and repair treatment', duration_minutes: 45, buffer_minutes: 10, capacity: 1, price_cents: 20000, currency: 'ZAR', is_active: true, metadata: {} },
-];
-
 function ServicesPage() {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,9 +15,9 @@ function ServicesPage() {
     try {
       setLoading(true);
       const result = await api.getServices({ is_active: true });
-      setServices(result.data.length > 0 ? result.data : DEMO_SERVICES);
+      setServices(result.data);
     } catch {
-      setServices(DEMO_SERVICES);
+      setServices([]);
     } finally {
       setLoading(false);
     }
