@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { authenticate, signUp, confirmSignUp, completeNewPassword, getUserRole } from '../api/client';
+import { authenticate, signUp, confirmSignUp, completeNewPassword, getUserRole, ensureCustomerRecord } from '../api/client';
 import './LoginPage.css';
 
 type LoginMode = 'login' | 'signup' | 'new-password' | 'verify';
@@ -15,6 +15,9 @@ function LoginPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phone, setPhone] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -45,6 +48,8 @@ function LoginPage() {
         setMode('new-password');
         setPassword('');
       } else {
+        // Create customer record if first login after registration
+        await ensureCustomerRecord();
         navigateAfterLogin();
       }
     } catch (err: any) {
@@ -57,16 +62,8 @@ function LoginPage() {
   async function handleNewPassword(e: React.FormEvent) {
     e.preventDefault();
     if (!newPassword || !confirmPassword) return;
-
-    if (newPassword !== confirmPassword) {
-      setErrorMessage('Passwords do not match.');
-      return;
-    }
-
-    if (newPassword.length < 8) {
-      setErrorMessage('Password must be at least 8 characters.');
-      return;
-    }
+    if (newPassword !== confirmPassword) { setErrorMessage('Passwords do not match.'); return; }
+    if (newPassword.length < 8) { setErrorMessage('Password must be at least 8 characters.'); return; }
 
     setLoading(true);
     setErrorMessage('');
@@ -82,22 +79,14 @@ function LoginPage() {
 
   async function handleSignUp(e: React.FormEvent) {
     e.preventDefault();
-    if (!email || !password || !confirmPassword) return;
-
-    if (password !== confirmPassword) {
-      setErrorMessage('Passwords do not match.');
-      return;
-    }
-
-    if (password.length < 8) {
-      setErrorMessage('Password must be at least 8 characters.');
-      return;
-    }
+    if (!email || !password || !confirmPassword || !firstName || !lastName || !phone) return;
+    if (password !== confirmPassword) { setErrorMessage('Passwords do not match.'); return; }
+    if (password.length < 8) { setErrorMessage('Password must be at least 8 characters.'); return; }
 
     setLoading(true);
     setErrorMessage('');
     try {
-      await signUp(email, password);
+      await signUp(email, password, firstName, lastName, phone);
       setSuccessMessage('Account created! Check your email for a verification code.');
       setMode('verify');
       setPassword('');
@@ -145,46 +134,19 @@ function LoginPage() {
           </p>
         </div>
 
-        {errorMessage && (
-          <div className="error-banner">
-            <span>⚠️</span> {errorMessage}
-          </div>
-        )}
+        {errorMessage && <div className="error-banner"><span>⚠️</span> {errorMessage}</div>}
+        {successMessage && <div className="success-banner"><span>✓</span> {successMessage}</div>}
 
-        {successMessage && (
-          <div className="success-banner">
-            <span>✓</span> {successMessage}
-          </div>
-        )}
-
-        {/* Login Form */}
+        {/* Login */}
         {mode === 'login' && (
           <form onSubmit={handleLogin} className="login-form">
             <div className="form-group">
               <label htmlFor="email">Email</label>
-              <input
-                id="email"
-                type="email"
-                className="form-input"
-                placeholder="your@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-              />
+              <input id="email" type="email" className="form-input" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" />
             </div>
             <div className="form-group">
               <label htmlFor="password">Password</label>
-              <input
-                id="password"
-                type="password"
-                className="form-input"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                autoComplete="current-password"
-              />
+              <input id="password" type="password" className="form-input" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required autoComplete="current-password" />
             </div>
             <button type="submit" className="btn btn-primary btn-full btn-lg" disabled={loading}>
               {loading ? 'Signing in...' : 'Sign In'}
@@ -192,34 +154,16 @@ function LoginPage() {
           </form>
         )}
 
-        {/* New Password Form (for invited users) */}
+        {/* New Password */}
         {mode === 'new-password' && (
           <form onSubmit={handleNewPassword} className="login-form">
             <div className="form-group">
               <label htmlFor="new-password">New Password</label>
-              <input
-                id="new-password"
-                type="password"
-                className="form-input"
-                placeholder="Choose a strong password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
-                autoComplete="new-password"
-              />
+              <input id="new-password" type="password" className="form-input" placeholder="Choose a strong password" value={newPassword} onChange={e => setNewPassword(e.target.value)} required autoComplete="new-password" />
             </div>
             <div className="form-group">
-              <label htmlFor="confirm-new-password">Confirm Password</label>
-              <input
-                id="confirm-new-password"
-                type="password"
-                className="form-input"
-                placeholder="••••••••"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                autoComplete="new-password"
-              />
+              <label htmlFor="confirm-new">Confirm Password</label>
+              <input id="confirm-new" type="password" className="form-input" placeholder="••••••••" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required autoComplete="new-password" />
             </div>
             <button type="submit" className="btn btn-primary btn-full btn-lg" disabled={loading}>
               {loading ? 'Setting password...' : 'Set Password & Continue'}
@@ -227,47 +171,34 @@ function LoginPage() {
           </form>
         )}
 
-        {/* Sign Up Form */}
+        {/* Sign Up */}
         {mode === 'signup' && (
           <form onSubmit={handleSignUp} className="login-form">
-            <div className="form-group">
-              <label htmlFor="signup-email">Email</label>
-              <input
-                id="signup-email"
-                type="email"
-                className="form-input"
-                placeholder="your@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-              />
+            <div className="form-row">
+              <div className="form-group">
+                <label htmlFor="first-name">First Name *</label>
+                <input id="first-name" type="text" className="form-input" placeholder="Thandi" value={firstName} onChange={e => setFirstName(e.target.value)} required />
+              </div>
+              <div className="form-group">
+                <label htmlFor="last-name">Last Name *</label>
+                <input id="last-name" type="text" className="form-input" placeholder="Mokoena" value={lastName} onChange={e => setLastName(e.target.value)} required />
+              </div>
             </div>
             <div className="form-group">
-              <label htmlFor="signup-password">Password</label>
-              <input
-                id="signup-password"
-                type="password"
-                className="form-input"
-                placeholder="At least 8 characters"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                autoComplete="new-password"
-              />
+              <label htmlFor="signup-phone">Phone Number *</label>
+              <input id="signup-phone" type="tel" className="form-input" placeholder="+27821234567" value={phone} onChange={e => setPhone(e.target.value)} required />
             </div>
             <div className="form-group">
-              <label htmlFor="signup-confirm">Confirm Password</label>
-              <input
-                id="signup-confirm"
-                type="password"
-                className="form-input"
-                placeholder="••••••••"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                autoComplete="new-password"
-              />
+              <label htmlFor="signup-email">Email *</label>
+              <input id="signup-email" type="email" className="form-input" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} required autoComplete="email" />
+            </div>
+            <div className="form-group">
+              <label htmlFor="signup-password">Password *</label>
+              <input id="signup-password" type="password" className="form-input" placeholder="At least 8 characters" value={password} onChange={e => setPassword(e.target.value)} required autoComplete="new-password" />
+            </div>
+            <div className="form-group">
+              <label htmlFor="signup-confirm">Confirm Password *</label>
+              <input id="signup-confirm" type="password" className="form-input" placeholder="••••••••" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required autoComplete="new-password" />
             </div>
             <button type="submit" className="btn btn-primary btn-full btn-lg" disabled={loading}>
               {loading ? 'Creating account...' : 'Create Account'}
@@ -275,23 +206,12 @@ function LoginPage() {
           </form>
         )}
 
-        {/* Verification Code Form */}
+        {/* Verify */}
         {mode === 'verify' && (
           <form onSubmit={handleVerify} className="login-form">
             <div className="form-group">
               <label htmlFor="verify-code">Verification Code</label>
-              <input
-                id="verify-code"
-                type="text"
-                className="form-input"
-                placeholder="Enter 6-digit code"
-                value={verificationCode}
-                onChange={(e) => setVerificationCode(e.target.value)}
-                required
-                autoComplete="one-time-code"
-                inputMode="numeric"
-                style={{ letterSpacing: '0.3em', textAlign: 'center', fontSize: '1.25rem' }}
-              />
+              <input id="verify-code" type="text" className="form-input" placeholder="Enter 6-digit code" value={verificationCode} onChange={e => setVerificationCode(e.target.value)} required autoComplete="one-time-code" inputMode="numeric" style={{ letterSpacing: '0.3em', textAlign: 'center', fontSize: '1.25rem' }} />
             </div>
             <button type="submit" className="btn btn-primary btn-full btn-lg" disabled={loading}>
               {loading ? 'Verifying...' : 'Verify Email'}
@@ -302,19 +222,9 @@ function LoginPage() {
         {mode !== 'new-password' && mode !== 'verify' && (
           <div className="login-switch">
             {mode === 'login' ? (
-              <p>
-                Don't have an account?{' '}
-                <button className="link-btn" onClick={() => { setMode('signup'); setErrorMessage(''); setSuccessMessage(''); }}>
-                  Sign up
-                </button>
-              </p>
+              <p>Don't have an account? <button className="link-btn" onClick={() => { setMode('signup'); setErrorMessage(''); setSuccessMessage(''); }}>Sign up</button></p>
             ) : (
-              <p>
-                Already have an account?{' '}
-                <button className="link-btn" onClick={() => { setMode('login'); setErrorMessage(''); setSuccessMessage(''); }}>
-                  Sign in
-                </button>
-              </p>
+              <p>Already have an account? <button className="link-btn" onClick={() => { setMode('login'); setErrorMessage(''); setSuccessMessage(''); }}>Sign in</button></p>
             )}
           </div>
         )}

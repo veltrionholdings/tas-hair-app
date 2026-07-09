@@ -396,10 +396,14 @@ export async function completeNewPassword(email: string, newPassword: string): P
 
 /**
  * Sign up a new customer account with Cognito.
+ * Name and phone are stored locally and used to create a customer record after verification.
  */
 export async function signUp(
   email: string,
   password: string,
+  firstName: string,
+  lastName: string,
+  phone: string,
   tenantId: string = 'da8e5df8-f070-4671-a176-590a76c574b2'
 ): Promise<void> {
   const url = `https://cognito-idp.${COGNITO_REGION}.amazonaws.com/`;
@@ -416,6 +420,9 @@ export async function signUp(
       Password: password,
       UserAttributes: [
         { Name: 'email', Value: email },
+        { Name: 'given_name', Value: firstName },
+        { Name: 'family_name', Value: lastName },
+        { Name: 'phone_number', Value: phone },
         { Name: 'custom:tenant_id', Value: tenantId },
         { Name: 'custom:role', Value: 'customer' },
       ],
@@ -426,6 +433,43 @@ export async function signUp(
     const err = await response.json();
     throw new Error(err.message || 'Sign up failed');
   }
+
+  // Store registration details locally so we can create the customer record after login
+  localStorage.setItem('pending_customer', JSON.stringify({ firstName, lastName, phone, email }));
+}
+
+/**
+ * Create a customer record in the bookings engine for the logged-in user.
+ * Called once after first login.
+ */
+export async function ensureCustomerRecord(): Promise<Customer | null> {
+  // Check if we have pending customer details from registration
+  const pending = localStorage.getItem('pending_customer');
+  if (pending) {
+    try {
+      const { firstName, lastName, phone, email } = JSON.parse(pending);
+      const customer = await api.createCustomer({
+        first_name: firstName,
+        last_name: lastName,
+        phone,
+        email,
+      });
+      localStorage.removeItem('pending_customer');
+      localStorage.setItem('customer_id', customer.id);
+      return customer;
+    } catch {
+      // Customer might already exist — that's fine
+      localStorage.removeItem('pending_customer');
+    }
+  }
+  return null;
+}
+
+/**
+ * Get the stored customer ID (set after customer record creation).
+ */
+export function getCustomerId(): string | null {
+  return localStorage.getItem('customer_id');
 }
 
 /**
@@ -454,21 +498,41 @@ export async function confirmSignUp(email: string, code: string): Promise<void> 
 }
 
 /**
+ * Decode a base64url-encoded string (JWT tokens use base64url, not standard base64).
+ */
+function decodeBase64Url(str: string): string {
+  // Replace base64url chars with standard base64
+  let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+  // Pad with = if needed
+  const pad = base64.length % 4;
+  if (pad) base64 += '='.repeat(4 - pad);
+  return atob(base64);
+}
+
+/**
+ * Parse JWT token payload safely.
+ */
+function parseToken(token: string): Record<string, any> | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    return JSON.parse(decodeBase64Url(parts[1]));
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Restore token from localStorage on app load.
  * Call this ONCE at app startup.
  */
 export function restoreSession(): boolean {
   const token = localStorage.getItem('auth_token');
   if (token) {
-    // Check if token is expired (JWT exp claim)
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      if (payload.exp * 1000 > Date.now()) {
-        api.setToken(token);
-        return true;
-      }
-    } catch {
-      // Invalid token
+    const payload = parseToken(token);
+    if (payload && payload.exp * 1000 > Date.now()) {
+      api.setToken(token);
+      return true;
     }
     localStorage.removeItem('auth_token');
     localStorage.removeItem('auth_email');
@@ -484,12 +548,9 @@ export function restoreSession(): boolean {
 export function isAuthenticated(): boolean {
   const token = localStorage.getItem('auth_token');
   if (!token) return false;
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return payload.exp * 1000 > Date.now();
-  } catch {
-    return false;
-  }
+  const payload = parseToken(token);
+  if (!payload) return false;
+  return payload.exp * 1000 > Date.now();
 }
 
 /**
@@ -498,13 +559,10 @@ export function isAuthenticated(): boolean {
 export function getUserRole(): 'admin' | 'employee' | 'customer' | null {
   const token = localStorage.getItem('auth_token');
   if (!token) return null;
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    if (payload.exp * 1000 <= Date.now()) return null;
-    return (payload['custom:role'] as 'admin' | 'employee' | 'customer') || 'customer';
-  } catch {
-    return null;
-  }
+  const payload = parseToken(token);
+  if (!payload) return null;
+  if (payload.exp * 1000 <= Date.now()) return null;
+  return (payload['custom:role'] as 'admin' | 'employee' | 'customer') || 'customer';
 }
 
 export function logout() {

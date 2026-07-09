@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { isAuthenticated, getUserRole } from '../api/client';
 
 interface RoleGuardProps {
@@ -12,12 +12,15 @@ interface RoleGuardProps {
  * or to home if authenticated but wrong role.
  */
 function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
+  const location = useLocation();
+
   if (!isAuthenticated()) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" state={{ returnTo: location.pathname }} replace />;
   }
 
   const role = getUserRole();
   if (!role || !allowedRoles.includes(role)) {
+    // If role can't be determined, redirect to home
     return <Navigate to="/" replace />;
   }
 

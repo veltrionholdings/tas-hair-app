@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { api, Service, Resource, AvailableSlot, isAuthenticated } from '../api/client';
+import { api, Service, Resource, AvailableSlot, isAuthenticated, getCustomerId } from '../api/client';
 import './BookingPage.css';
 
-type BookingStep = 'service' | 'stylist' | 'datetime' | 'details' | 'confirm';
+type BookingStep = 'service' | 'stylist' | 'datetime' | 'confirm';
 
 function BookingPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  // Auth gate — check if user is logged in, redirect to login if not
+  // Auth gate
   useEffect(() => {
     if (!isAuthenticated()) {
       navigate('/login', { state: { returnTo: '/book' + (window.location.search || '') } });
@@ -31,9 +31,6 @@ function BookingPage() {
   const [anyAvailable, setAnyAvailable] = useState(false);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedSlot, setSelectedSlot] = useState<AvailableSlot | null>(null);
-  const [customerName, setCustomerName] = useState('');
-  const [customerPhone, setCustomerPhone] = useState('');
-  const [customerEmail, setCustomerEmail] = useState('');
   const [notes, setNotes] = useState('');
 
   // Load services on mount
@@ -121,32 +118,26 @@ function BookingPage() {
 
   function handleSelectSlot(slot: AvailableSlot) {
     setSelectedSlot(slot);
-    setStep('details');
+    setStep('confirm');
   }
 
   async function handleConfirmBooking() {
-    if (!selectedService || !selectedSlot || !customerName || !customerPhone) return;
+    if (!selectedService || !selectedSlot) return;
+
+    const customerId = getCustomerId();
+    if (!customerId) {
+      setErrorMessage('Profile not found. Please log out and register again.');
+      return;
+    }
 
     setBookingLoading(true);
     setErrorMessage('');
     try {
-      // Create customer
-      const [firstName, ...lastParts] = customerName.trim().split(' ');
-      const lastName = lastParts.join(' ') || firstName;
-
-      const customer = await api.createCustomer({
-        first_name: firstName,
-        last_name: lastName,
-        phone: customerPhone,
-        email: customerEmail,
-      });
-
-      // Create booking
       const startTime = `${selectedDate}T${selectedSlot.start_time}:00`;
       await api.createBooking({
         service_id: selectedService.id,
         resource_id: anyAvailable ? null : (selectedStylist?.id || selectedSlot.resources[0]?.id || null),
-        customer_id: customer.id,
+        customer_id: customerId,
         start_time: startTime,
         party_size: 1,
         notes: notes || undefined,
@@ -215,9 +206,9 @@ function BookingPage() {
             <span className="progress-label">Time</span>
           </div>
           <div className="progress-line" />
-          <div className={`progress-step ${step === 'details' || step === 'confirm' ? 'active' : ''}`}>
+          <div className={`progress-step ${step === 'confirm' ? 'active' : ''}`}>
             <span className="progress-dot" />
-            <span className="progress-label">Details</span>
+            <span className="progress-label">Confirm</span>
           </div>
         </div>
 
@@ -354,84 +345,6 @@ function BookingPage() {
           </div>
         )}
 
-        {/* Step: Customer Details */}
-        {step === 'details' && (
-          <div className="booking-step">
-            <h2>Your Details</h2>
-
-            <div className="booking-summary-mini">
-              <span>{selectedService?.name}</span>
-              <span>•</span>
-              <span>{formatDate(selectedDate)}</span>
-              <span>•</span>
-              <span>{selectedSlot?.start_time}</span>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="name">Full Name *</label>
-              <input
-                id="name"
-                type="text"
-                className="form-input"
-                placeholder="e.g. Thandi Mokoena"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="phone">Phone Number *</label>
-              <input
-                id="phone"
-                type="tel"
-                className="form-input"
-                placeholder="e.g. 078 878 2527"
-                value={customerPhone}
-                onChange={(e) => setCustomerPhone(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="email">Email *</label>
-              <input
-                id="email"
-                type="email"
-                className="form-input"
-                placeholder="e.g. thandi@example.com"
-                value={customerEmail}
-                onChange={(e) => setCustomerEmail(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="notes">Notes (optional)</label>
-              <textarea
-                id="notes"
-                className="form-input form-textarea"
-                placeholder="Any special requests or notes..."
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={3}
-              />
-            </div>
-
-            <button
-              className="btn btn-primary btn-full btn-lg"
-              disabled={!customerName.trim() || !customerPhone.trim() || !customerEmail.trim()}
-              onClick={() => setStep('confirm')}
-            >
-              Review Booking
-            </button>
-
-            <button className="btn-back" onClick={() => setStep('datetime')}>
-              ← Back
-            </button>
-          </div>
-        )}
-
         {/* Step: Confirm */}
         {step === 'confirm' && (
           <div className="booking-step">
@@ -462,14 +375,6 @@ function BookingPage() {
                 <span className="confirm-label">Duration</span>
                 <span className="confirm-value">{selectedService?.duration_minutes} min</span>
               </div>
-              <div className="confirm-row">
-                <span className="confirm-label">Name</span>
-                <span className="confirm-value">{customerName}</span>
-              </div>
-              <div className="confirm-row">
-                <span className="confirm-label">Phone</span>
-                <span className="confirm-value">{customerPhone}</span>
-              </div>
               {selectedService?.price_cents && (
                 <div className="confirm-row confirm-row-total">
                   <span className="confirm-label">Price</span>
@@ -480,6 +385,18 @@ function BookingPage() {
               )}
             </div>
 
+            <div className="form-group">
+              <label htmlFor="notes">Notes (optional)</label>
+              <textarea
+                id="notes"
+                className="form-input form-textarea"
+                placeholder="Any special requests..."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={2}
+              />
+            </div>
+
             <button
               className="btn btn-primary btn-full btn-lg"
               onClick={handleConfirmBooking}
@@ -488,7 +405,7 @@ function BookingPage() {
               {bookingLoading ? 'Booking...' : 'Confirm Booking'}
             </button>
 
-            <button className="btn-back" onClick={() => setStep('details')} disabled={bookingLoading}>
+            <button className="btn-back" onClick={() => setStep('datetime')} disabled={bookingLoading}>
               ← Back
             </button>
           </div>

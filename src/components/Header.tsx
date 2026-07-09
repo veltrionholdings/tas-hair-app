@@ -1,8 +1,10 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { isAuthenticated } from '../api/client';
 import './Header.css';
 
 function Header() {
+  // useLocation forces re-render on route change, so auth state is re-evaluated
+  useLocation();
   const loggedIn = isAuthenticated();
 
   return (

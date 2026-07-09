@@ -106,7 +106,7 @@ function StaffPage() {
     <div className="page admin-page">
       <div className="container">
         <div className="page-header">
-          <h1>Staff</h1>
+          <h1>Users</h1>
           <button className="btn btn-primary" onClick={() => setShowInvite(true)}>+ Invite</button>
         </div>
 
