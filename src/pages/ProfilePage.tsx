@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
-import { api, logout, getStoredEmail, getUserRole, isAuthenticated, getCustomerId, Customer } from '../api/client';
+import { logout, getStoredEmail, getUserRole, isAuthenticated, getCustomerId, Customer } from '../api/client';
 import ConfirmModal from '../components/ConfirmModal';
 import './ProfilePage.css';
 
