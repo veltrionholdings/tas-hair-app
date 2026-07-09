@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { api, Booking } from '../../api/client';
+import { Booking } from '../../api/client';
 import './AdminPages.css';
 
 function AdminCustomerDetailPage() {

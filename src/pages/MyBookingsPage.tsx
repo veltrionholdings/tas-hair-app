@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api, Booking, isAuthenticated } from '../api/client';
-import ConfirmModal from '../components/ConfirmModal';
 import './MyBookingsPage.css';
 
 function MyBookingsPage() {

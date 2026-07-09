@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { api, Booking, Resource } from '../../api/client';
+import { api, Booking } from '../../api/client';
 import { getMyResource } from '../../utils/getMyResource';
 import '../admin/AdminPages.css';
 
 function EmployeeDashboardPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [myResource, setMyResource] = useState<Resource | null>(null);
   const [isStylist, setIsStylist] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -16,7 +15,6 @@ function EmployeeDashboardPage() {
     try {
       setLoading(true);
       const matched = await getMyResource();
-      setMyResource(matched);
       setIsStylist(!!matched);
 
       const today = new Date().toISOString().split('T')[0];

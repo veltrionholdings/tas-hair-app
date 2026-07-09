@@ -23,15 +23,8 @@ function AdminReportsPage() {
     finally { setLoading(false); }
   }
 
-  // Revenue
+  // Revenue (placeholder — would need price data on bookings)
   const completedBookings = bookings.filter(b => b.status === 'completed');
-  const revenue = completedBookings.reduce((sum, b) => {
-    if (typeof b.service === 'object' && b.service) {
-      // We don't have price on the booking response, estimate from services list
-      // For now show count
-    }
-    return sum;
-  }, 0);
 
   // No-show stats
   const noShows = bookings.filter(b => b.status === 'no_show');

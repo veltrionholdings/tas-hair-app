@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { api, Service, Resource, AvailableSlot } from '../../api/client';
 import './AdminPages.css';
 
 function AdminNewBookingPage() {
-  const navigate = useNavigate();
   const [searchParams] = new URLSearchParams(window.location.search) ? [new URLSearchParams(window.location.search)] : [new URLSearchParams()];
   const [services, setServices] = useState<Service[]>([]);
   const [resources, setResources] = useState<Resource[]>([]);
