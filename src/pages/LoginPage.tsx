@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { authenticate, signUp, confirmSignUp, completeNewPassword, getUserRole, ensureCustomerRecord, forgotPassword, confirmForgotPassword } from '../api/client';
+import PhoneInput from '../components/PhoneInput';
+import '../components/PhoneInput.css';
 import './LoginPage.css';
 
 type LoginMode = 'login' | 'signup' | 'new-password' | 'verify' | 'forgot' | 'reset';
@@ -260,7 +262,7 @@ function LoginPage() {
             </div>
             <div className="form-group">
               <label htmlFor="signup-phone">Phone Number *</label>
-              <input id="signup-phone" type="tel" className="form-input" placeholder="+27821234567" value={phone} onChange={e => setPhone(e.target.value)} required />
+              <PhoneInput id="signup-phone" value={phone} onChange={setPhone} required />
             </div>
             <div className="form-group">
               <label htmlFor="signup-email">Email *</label>

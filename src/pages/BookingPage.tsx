@@ -24,6 +24,7 @@ function BookingPage() {
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [bookingLoading, setBookingLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const rescheduleId = searchParams.get('reschedule');
 
   // Selections
   const [selectedService, setSelectedService] = useState<Service | null>(null);
@@ -177,6 +178,11 @@ function BookingPage() {
         party_size: 1,
         notes: notes || undefined,
       });
+
+      // If rescheduling, cancel the old booking
+      if (rescheduleId) {
+        try { await api.cancelBooking(rescheduleId, 'Rescheduled by customer'); } catch { /* ignore */ }
+      }
 
       navigate('/booking-confirmed');
     } catch (err: any) {

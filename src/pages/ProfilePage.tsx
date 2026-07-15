@@ -17,18 +17,37 @@ function ProfilePage() {
 
   const email = getStoredEmail();
   const role = getUserRole();
-  const customerId = getCustomerId();
 
-  useEffect(() => {
-    if (customerId) loadCustomer();
-    else setLoading(false);
-  }, []);
+  useEffect(() => { loadCustomer(); }, []);
 
   async function loadCustomer() {
+    // Try stored customer_id first
+    let id = getCustomerId();
+
+    // If not stored, look up by email
+    if (!id && email) {
+      try {
+        const response = await fetch(
+          `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/v1'}/customers?search=${encodeURIComponent(email)}`,
+          { headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` } }
+        );
+        if (response.ok) {
+          const data = await response.json();
+          const match = data.data?.find((c: any) => c.email === email);
+          if (match) {
+            id = match.id;
+            localStorage.setItem('customer_id', match.id);
+          }
+        }
+      } catch { /* ignore */ }
+    }
+
+    if (!id) { setLoading(false); return; }
+
     try {
       setLoading(true);
       const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/v1'}/customers/${customerId}`,
+        `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/v1'}/customers/${id}`,
         { headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` } }
       );
       if (response.ok) {
@@ -44,13 +63,14 @@ function ProfilePage() {
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
-    if (!customerId || !firstName || !lastName) return;
+    const id = getCustomerId() || customer?.id;
+    if (!id || !firstName || !lastName) return;
 
     setSaving(true);
     setMessage('');
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/v1'}/customers/${customerId}`,
+        `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/v1'}/customers/${id}`,
         {
           method: 'PATCH',
           headers: {

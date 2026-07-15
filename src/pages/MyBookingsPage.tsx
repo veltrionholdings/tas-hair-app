@@ -26,7 +26,11 @@ function MyBookingsPage() {
     try {
       await api.cancelBooking(cancellingId, cancelReason || 'Customer cancelled');
       setBookings(prev => prev.map(b => b.id === cancellingId ? { ...b, status: 'cancelled' } : b));
-    } catch { /* ignore */ }
+    } catch (err: any) {
+      // Show the actual error to the user
+      const msg = err?.message || 'Unable to cancel. Please contact the salon.';
+      alert(msg);
+    }
     finally { setCancellingId(null); setCancelReason(''); }
   }
 
@@ -105,6 +109,10 @@ function MyBookingsPage() {
                     {booking.resource && typeof booking.resource === 'object' && <div className="booking-detail"><span className="detail-icon">💇‍♀️</span><span>{booking.resource.name}</span></div>}
                   </div>
                   <button className="btn-cancel" onClick={() => setCancellingId(booking.id)}>Cancel Booking</button>
+                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                    <Link to={`/book?service=${getServiceId(booking)}&reschedule=${booking.id}`} className="btn-rebook" style={{ flex: 1, textAlign: 'center' }}>Change Time</Link>
+                    <Link to={`/book?reschedule=${booking.id}`} className="btn-rebook" style={{ flex: 1, textAlign: 'center' }}>Change Service</Link>
+                  </div>
                 </div>
               ))}
             </div>
