@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { api, Service, Resource, AvailableSlot, isAuthenticated, getCustomerId } from '../api/client';
+import { api, Service, Resource, AvailableSlot, isAuthenticated, getCustomerId, getStoredEmail } from '../api/client';
 import './BookingPage.css';
 
 type BookingStep = 'service' | 'stylist' | 'datetime' | 'confirm';
@@ -124,7 +124,26 @@ function BookingPage() {
   async function handleConfirmBooking() {
     if (!selectedService || !selectedSlot) return;
 
-    const customerId = getCustomerId();
+    let customerId = getCustomerId();
+
+    // If no customer_id stored, create one from the logged-in user's email
+    if (!customerId) {
+      const email = getStoredEmail();
+      if (email) {
+        try {
+          const customer = await api.createCustomer({
+            first_name: email.split('@')[0],
+            last_name: '',
+            email,
+          });
+          localStorage.setItem('customer_id', customer.id);
+          customerId = customer.id;
+        } catch {
+          // createCustomer deduplicates by email — if it returns existing, we're good
+        }
+      }
+    }
+
     if (!customerId) {
       setErrorMessage('Profile not found. Please log out and register again.');
       return;
