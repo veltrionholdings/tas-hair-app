@@ -146,7 +146,7 @@ function BookingPage() {
         try {
           const customer = await api.createCustomer({
             first_name: email.split('@')[0],
-            last_name: '',
+            last_name: email.split('@')[0],
             email,
           });
           localStorage.setItem('customer_id', customer.id);
