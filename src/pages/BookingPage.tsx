@@ -128,7 +128,20 @@ function BookingPage() {
 
     // If no customer_id stored, create one from the logged-in user's email
     if (!customerId) {
-      const email = getStoredEmail();
+      // Get email from JWT token directly
+      const token = localStorage.getItem('auth_token');
+      let email = getStoredEmail();
+      if (!email && token) {
+        try {
+          const parts = token.split('.');
+          let base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+          const pad = base64.length % 4;
+          if (pad) base64 += '='.repeat(4 - pad);
+          const payload = JSON.parse(atob(base64));
+          email = payload.email || null;
+        } catch { /* ignore */ }
+      }
+
       if (email) {
         try {
           const customer = await api.createCustomer({
@@ -138,14 +151,17 @@ function BookingPage() {
           });
           localStorage.setItem('customer_id', customer.id);
           customerId = customer.id;
-        } catch {
-          // createCustomer deduplicates by email — if it returns existing, we're good
+        } catch (err: any) {
+          console.error('Failed to create customer:', err);
+          setErrorMessage(`Unable to set up your profile: ${err.message || 'Unknown error'}. Please try again.`);
+          setBookingLoading(false);
+          return;
         }
       }
     }
 
     if (!customerId) {
-      setErrorMessage('Profile not found. Please log out and register again.');
+      setErrorMessage('Unable to create your profile. Please try again or contact support.');
       return;
     }
 
