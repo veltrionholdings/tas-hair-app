@@ -17,10 +17,7 @@ function EmployeeDashboardPage() {
       const matched = await getMyResource();
       setIsStylist(!!matched);
 
-      const today = new Date().toISOString().split('T')[0];
-      const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-      
-      // Get all confirmed bookings (not just today) so we can show upcoming
+      // Get all confirmed bookings so we can show today + upcoming
       const result = await api.getBookings({ status: 'confirmed' });
 
       if (matched) {
