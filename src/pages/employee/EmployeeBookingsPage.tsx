@@ -27,7 +27,6 @@ function EmployeeBookingsPage() {
   const [notesSaving, setNotesSaving] = useState(false);
 
   const [initDone, setInitDone] = useState(false);
-  const myResourceRef = { current: null as Resource | null };
 
   useEffect(() => { init(); }, []);
   useEffect(() => { if (initDone && filter !== 'search') loadBookings(); }, [filter, initDone]);
@@ -37,12 +36,18 @@ function EmployeeBookingsPage() {
     setMyResource(matched);
     setIsStylist(!!matched);
     setAllResources(resResult.data);
-    myResourceRef.current = matched;
     setInitDone(true);
+    // Load bookings immediately with the resolved resource to avoid state race
+    await loadBookingsWithResource(matched);
   }
 
   async function loadBookings() {
-    if (!initDone) return;
+    // Re-resolve the resource fresh each time to avoid stale state
+    const resource = await getMyResource();
+    await loadBookingsWithResource(resource);
+  }
+
+  async function loadBookingsWithResource(resource: Resource | null) {
     try {
       setLoading(true);
       const today = new Date().toISOString().split('T')[0];
@@ -55,8 +60,6 @@ function EmployeeBookingsPage() {
       else if (filter && filter !== 'search') params = { status: filter };
 
       const result = await api.getBookings(params);
-      // Use ref for immediate access to the resource
-      const resource = myResourceRef.current || myResource;
       const stylist = !!resource;
       
       let filtered = result.data;
@@ -81,7 +84,8 @@ function EmployeeBookingsPage() {
       if (searchStatuses.length === 1) params.status = searchStatuses[0];
 
       const result = await api.getBookings(params);
-      const resource = myResourceRef.current || myResource;
+      // Re-resolve resource to avoid stale state
+      const resource = myResource || await getMyResource();
       const stylist = !!resource;
 
       let filtered = result.data;
