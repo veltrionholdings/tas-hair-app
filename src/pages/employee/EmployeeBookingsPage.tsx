@@ -26,17 +26,21 @@ function EmployeeBookingsPage() {
   const [editNotesText, setEditNotesText] = useState('');
   const [notesSaving, setNotesSaving] = useState(false);
 
+  const [initDone, setInitDone] = useState(false);
+
   useEffect(() => { init(); }, []);
-  useEffect(() => { if (filter !== 'search') loadBookings(); }, [filter, myResource]);
+  useEffect(() => { if (initDone && filter !== 'search') loadBookings(); }, [filter, initDone]);
 
   async function init() {
     const [matched, resResult] = await Promise.all([getMyResource(), api.getResources({ is_active: true })]);
     setMyResource(matched);
     setIsStylist(!!matched);
     setAllResources(resResult.data);
+    setInitDone(true);
   }
 
   async function loadBookings() {
+    if (!initDone) return;
     try {
       setLoading(true);
       const today = new Date().toISOString().split('T')[0];
@@ -90,6 +94,17 @@ function EmployeeBookingsPage() {
 
   async function handleComplete(id: string) { try { await api.completeBooking(id); await loadBookings(); } catch {} }
   async function handleNoShow(id: string) { try { await api.noShowBooking(id); await loadBookings(); } catch {} }
+  async function handleCancel(id: string) { try { await api.cancelBooking(id, 'Cancelled by staff'); await loadBookings(); } catch {} }
+
+  // Reschedule
+  const [rescheduleId, setRescheduleId] = useState<string | null>(null);
+  const [newDateTime, setNewDateTime] = useState('');
+
+  async function handleReschedule() {
+    if (!rescheduleId || !newDateTime) return;
+    try { await api.rescheduleBooking(rescheduleId, newDateTime); setRescheduleId(null); setNewDateTime(''); await loadBookings(); }
+    catch { /* ignore */ }
+  }
 
   async function handleSaveNotes() {
     if (!editNotesId) return; setNotesSaving(true);
@@ -172,6 +187,23 @@ function EmployeeBookingsPage() {
           <button className={`view-btn ${viewMode === 'calendar' ? 'active' : ''}`} onClick={() => setViewMode('calendar')}>Calendar</button>
         </div>
 
+        {/* Reschedule Modal */}
+        {rescheduleId && (
+          <div className="modal-backdrop" onClick={() => setRescheduleId(null)}>
+            <div className="modal-content" onClick={e => e.stopPropagation()}>
+              <h3 className="modal-title">Reschedule</h3>
+              <div className="form-group">
+                <label>New date & time</label>
+                <input type="datetime-local" className="form-input" value={newDateTime} onChange={e => setNewDateTime(e.target.value)} min={new Date().toISOString().slice(0, 16)} />
+              </div>
+              <div className="modal-actions">
+                <button className="btn btn-secondary modal-btn" onClick={() => setRescheduleId(null)}>Cancel</button>
+                <button className="btn btn-primary modal-btn" onClick={handleReschedule} disabled={!newDateTime}>Reschedule</button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Edit Notes Modal */}
         {editNotesId && (
           <div className="modal-backdrop" onClick={() => setEditNotesId(null)}>
@@ -231,6 +263,8 @@ function EmployeeBookingsPage() {
                   <div className="admin-booking-actions">
                     <button className="btn-small btn-complete" onClick={() => handleComplete(b.id)}>Complete</button>
                     <button className="btn-small btn-noshow" onClick={() => handleNoShow(b.id)}>No Show</button>
+                    <button className="btn-small btn-reschedule" onClick={() => setRescheduleId(b.id)}>Reschedule</button>
+                    <button className="btn-small btn-delete" onClick={() => handleCancel(b.id)}>Cancel</button>
                     <button className="btn-small" style={{ color: 'var(--color-grey-dark)', borderColor: 'var(--color-grey-light)' }} onClick={() => { setEditNotesId(b.id); setEditNotesText(b.notes || ''); }}>Notes</button>
                   </div>
                 )}
