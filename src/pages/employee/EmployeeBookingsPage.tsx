@@ -11,7 +11,7 @@ function EmployeeBookingsPage() {
   const [myResource, setMyResource] = useState<Resource | null>(null);
   const [isStylist, setIsStylist] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('today');
+  const [filter, setFilter] = useState('confirmed');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
 
   // Search
@@ -29,10 +29,12 @@ function EmployeeBookingsPage() {
   const [initDone, setInitDone] = useState(false);
 
   useEffect(() => { init(); }, []);
-  useEffect(() => { if (initDone && filter !== 'search') loadBookings(); }, [filter, initDone]);
+  // Only reload when filter changes AFTER init (init already does the first load)
+  useEffect(() => { if (initDone && filter !== 'search') loadBookings(); }, [filter]);
 
   async function init() {
     const [matched, resResult] = await Promise.all([getMyResource(), api.getResources({ is_active: true })]);
+    console.log('[EmployeeBookings] init - matched resource:', matched?.id, matched?.name);
     setMyResource(matched);
     setIsStylist(!!matched);
     setAllResources(resResult.data);
@@ -60,17 +62,19 @@ function EmployeeBookingsPage() {
       else if (filter && filter !== 'search') params = { status: filter };
 
       const result = await api.getBookings(params);
-      const stylist = !!resource;
+      console.log('[EmployeeBookings] API returned', result.data.length, 'bookings for filter:', filter, 'params:', params);
       
+      const stylist = !!resource;
       let filtered = result.data;
       if (stylist && resource) {
         filtered = result.data.filter(b => {
-          if (typeof b.resource === 'object' && b.resource) return b.resource.id === resource.id;
-          return b.resource_id === resource.id;
+          const bookingResId = typeof b.resource === 'object' && b.resource ? b.resource.id : b.resource_id;
+          return bookingResId === resource.id;
         });
+        console.log('[EmployeeBookings] Filtered to', filtered.length, 'bookings for resource:', resource.id, resource.name);
       }
       setBookings(filtered);
-    } catch { setBookings([]); }
+    } catch (err) { console.error('[EmployeeBookings] error:', err); setBookings([]); }
     finally { setLoading(false); }
   }
 
