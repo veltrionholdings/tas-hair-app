@@ -27,6 +27,7 @@ function EmployeeBookingsPage() {
   const [notesSaving, setNotesSaving] = useState(false);
 
   const [initDone, setInitDone] = useState(false);
+  const myResourceRef = { current: null as Resource | null };
 
   useEffect(() => { init(); }, []);
   useEffect(() => { if (initDone && filter !== 'search') loadBookings(); }, [filter, initDone]);
@@ -36,6 +37,7 @@ function EmployeeBookingsPage() {
     setMyResource(matched);
     setIsStylist(!!matched);
     setAllResources(resResult.data);
+    myResourceRef.current = matched;
     setInitDone(true);
   }
 
@@ -53,18 +55,20 @@ function EmployeeBookingsPage() {
       else if (filter && filter !== 'search') params = { status: filter };
 
       const result = await api.getBookings(params);
-      setBookings(scopeBookings(result.data));
+      // Use ref for immediate access to the resource
+      const resource = myResourceRef.current || myResource;
+      const stylist = !!resource;
+      
+      let filtered = result.data;
+      if (stylist && resource) {
+        filtered = result.data.filter(b => {
+          if (typeof b.resource === 'object' && b.resource) return b.resource.id === resource.id;
+          return b.resource_id === resource.id;
+        });
+      }
+      setBookings(filtered);
     } catch { setBookings([]); }
     finally { setLoading(false); }
-  }
-
-  function scopeBookings(data: Booking[]): Booking[] {
-    if (!isStylist) return data; // Receptionist sees all
-    if (!myResource) return [];
-    return data.filter(b => {
-      if (typeof b.resource === 'object' && b.resource) return b.resource.id === myResource.id;
-      return b.resource_id === myResource.id;
-    });
   }
 
   async function handleSearch() {
@@ -77,7 +81,17 @@ function EmployeeBookingsPage() {
       if (searchStatuses.length === 1) params.status = searchStatuses[0];
 
       const result = await api.getBookings(params);
-      let filtered = scopeBookings(result.data);
+      const resource = myResourceRef.current || myResource;
+      const stylist = !!resource;
+
+      let filtered = result.data;
+      // Scope to own resource if stylist
+      if (stylist && resource) {
+        filtered = filtered.filter(b => {
+          if (typeof b.resource === 'object' && b.resource) return b.resource.id === resource.id;
+          return b.resource_id === resource.id;
+        });
+      }
       if (searchStatuses.length > 1) filtered = filtered.filter(b => searchStatuses.includes(b.status));
       if (searchResourceIds.length > 0) filtered = filtered.filter(b => {
         const resId = typeof b.resource === 'object' && b.resource ? b.resource.id : b.resource_id;
