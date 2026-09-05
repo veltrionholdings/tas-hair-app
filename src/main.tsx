@@ -3,6 +3,10 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import './styles/global.css';
+import { registerSW } from 'virtual:pwa-register';
+
+// Register service worker for PWA install support
+registerSW({ immediate: true });
 
 // Detect when another tab changes the auth session and force reload
 window.addEventListener('storage', (event) => {
