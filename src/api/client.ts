@@ -7,8 +7,19 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000
 const COGNITO_CLIENT_ID = import.meta.env.VITE_COGNITO_CLIENT_ID || 'm535i5660f5harvfu6fou0cu9';
 const COGNITO_REGION = import.meta.env.VITE_COGNITO_REGION || 'eu-west-1';
 
+// Cognito Hosted UI domain + redirect URI for federated (Google) sign-in.
+// e.g. VITE_COGNITO_DOMAIN=tas-hair-auth.auth.eu-west-1.amazoncognito.com
+const COGNITO_DOMAIN = import.meta.env.VITE_COGNITO_DOMAIN || '';
+const OAUTH_REDIRECT_URI =
+  import.meta.env.VITE_COGNITO_REDIRECT_URI || `${window.location.origin}/auth/callback`;
+
 /** Version of the marketing-consent wording currently shown to users (POPIA). */
 export const MARKETING_CONSENT_VERSION = 'v1';
+
+/** True when the Cognito Hosted UI domain is configured (Google login available). */
+export function isGoogleLoginEnabled(): boolean {
+  return Boolean(COGNITO_DOMAIN);
+}
 
 interface ApiError {
   error: {
@@ -500,6 +511,27 @@ export async function ensureCustomerRecord(): Promise<Customer | null> {
       localStorage.removeItem('pending_customer');
     }
   }
+
+  // Federated (Google) users have no pending_customer — build the record from
+  // the ID-token claims instead. The backend dedupes by email, so this is safe
+  // to run on every federated login.
+  const token = localStorage.getItem('auth_token');
+  if (token) {
+    const claims = parseToken(token);
+    if (claims?.email && !localStorage.getItem('customer_id')) {
+      try {
+        const customer = await api.createCustomer({
+          first_name: claims.given_name || claims.name || claims.email.split('@')[0],
+          last_name: claims.family_name || '',
+          email: claims.email,
+        });
+        localStorage.setItem('customer_id', customer.id);
+        return customer;
+      } catch {
+        // Already exists (deduped by email) — fine.
+      }
+    }
+  }
   return null;
 }
 
@@ -583,6 +615,68 @@ export async function confirmForgotPassword(email: string, code: string, newPass
     const err = await response.json();
     throw new Error(err.message || 'Failed to reset password');
   }
+}
+
+/**
+ * Redirect the browser to the Cognito Hosted UI to sign in with Google.
+ * After Google auth, Cognito redirects back to OAUTH_REDIRECT_URI with a `code`.
+ */
+export function loginWithGoogle(): void {
+  if (!COGNITO_DOMAIN) {
+    throw new Error('Google sign-in is not configured');
+  }
+  const params = new URLSearchParams({
+    identity_provider: 'Google',
+    client_id: COGNITO_CLIENT_ID,
+    response_type: 'code',
+    scope: 'openid email profile',
+    redirect_uri: OAUTH_REDIRECT_URI,
+  });
+  window.location.href = `https://${COGNITO_DOMAIN}/oauth2/authorize?${params.toString()}`;
+}
+
+/**
+ * Exchange the authorization code (from the Hosted UI redirect) for tokens.
+ * Stores the ID token exactly like authenticate() so the rest of the app works
+ * unchanged, then returns the parsed ID-token claims for customer-record setup.
+ */
+export async function completeOAuthLogin(code: string): Promise<Record<string, any>> {
+  if (!COGNITO_DOMAIN) {
+    throw new Error('Google sign-in is not configured');
+  }
+
+  const body = new URLSearchParams({
+    grant_type: 'authorization_code',
+    client_id: COGNITO_CLIENT_ID,
+    code,
+    redirect_uri: OAUTH_REDIRECT_URI,
+  });
+
+  const response = await fetch(`https://${COGNITO_DOMAIN}/oauth2/token`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: body.toString(),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to complete Google sign-in');
+  }
+
+  const data = await response.json();
+  const token = data.id_token as string;
+  if (!token) throw new Error('No ID token returned from Google sign-in');
+
+  api.setToken(token);
+  localStorage.setItem('auth_token', token);
+
+  const claims = parseToken(token) || {};
+  if (claims.email) {
+    localStorage.setItem('auth_email', claims.email);
+  }
+  if (data.refresh_token) {
+    localStorage.setItem('auth_refresh', data.refresh_token);
+  }
+  return claims;
 }
 
 /**

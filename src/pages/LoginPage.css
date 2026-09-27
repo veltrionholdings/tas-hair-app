@@ -94,3 +94,46 @@
   accent-color: var(--color-primary);
   cursor: pointer;
 }
+
+.oauth-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: var(--space-lg) 0;
+  color: var(--color-grey);
+  font-size: 0.8125rem;
+}
+
+.oauth-divider::before,
+.oauth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--color-grey-light, #e0e0e0);
+}
+
+.oauth-divider span {
+  padding: 0 0.75rem;
+}
+
+.btn-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: var(--color-white, #fff);
+  color: #3c4043;
+  border: 1.5px solid var(--color-grey-light, #dadce0);
+  border-radius: var(--radius-md, 10px);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.btn-google:hover {
+  background: #f7f8f8;
+  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.1));
+}
