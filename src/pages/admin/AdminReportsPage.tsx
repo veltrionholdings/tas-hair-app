@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { api, Booking } from '../../api/client';
+import LoadingSpinner from '../../components/LoadingSpinner';
 import './AdminPages.css';
 
 function AdminReportsPage() {
@@ -76,7 +77,7 @@ function AdminReportsPage() {
   }
 
   if (loading) {
-    return <div className="page admin-page"><div className="container"><div className="page-header"><h1>Reports</h1></div><div className="loading-shimmer" style={{ height: 300 }} /></div></div>;
+    return <div className="page admin-page"><div className="container"><div className="page-header"><h1>Reports</h1></div><LoadingSpinner fullPage label="Loading reports..." /></div></div>;
   }
 
   return (

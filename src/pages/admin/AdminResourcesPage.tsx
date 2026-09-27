@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api, Resource, Service } from '../../api/client';
 import ConfirmModal from '../../components/ConfirmModal';
+import LoadingSpinner from '../../components/LoadingSpinner';
 import './AdminPages.css';
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -181,7 +182,7 @@ function AdminResourcesPage() {
         )}
 
         {loading ? (
-          <div className="loading-state"><div className="loading-shimmer" style={{ height: 70 }} /><div className="loading-shimmer" style={{ height: 70 }} /></div>
+          <LoadingSpinner fullPage label="Loading stylists..." />
         ) : resources.length === 0 ? (
           <div className="empty-state"><p>No stylists added yet. Add one to get started.</p></div>
         ) : (

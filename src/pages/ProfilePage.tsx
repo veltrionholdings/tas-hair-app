@@ -4,6 +4,7 @@ import { api, logout, getStoredEmail, getUserRole, isAuthenticated, getCustomerI
 import PhoneInput from '../components/PhoneInput';
 import '../components/PhoneInput.css';
 import ConfirmModal from '../components/ConfirmModal';
+import LoadingSpinner from '../components/LoadingSpinner';
 import './ProfilePage.css';
 
 /**
@@ -147,7 +148,7 @@ function ProfilePage() {
         {message && <div className="success-banner" style={{ marginBottom: '1rem' }}><span>✓</span> {message}</div>}
 
         {loading ? (
-          <div className="loading-shimmer" style={{ height: 120, borderRadius: 12 }} />
+          <LoadingSpinner fullPage label="Loading your profile..." />
         ) : editing ? (
           <form onSubmit={handleSave} className="card" style={{ marginBottom: '1.5rem' }}>
             <div className="form-group">

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api, Resource } from '../../api/client';
 import { getMyResource } from '../../utils/getMyResource';
+import LoadingSpinner from '../../components/LoadingSpinner';
 import '../admin/AdminPages.css';
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -53,7 +54,7 @@ function SchedulePage() {
   }
 
   if (loading) {
-    return <div className="page admin-page"><div className="container"><div className="page-header"><h1>My Schedule</h1></div><div className="loading-shimmer" style={{ height: 200 }} /></div></div>;
+    return <div className="page admin-page"><div className="container"><div className="page-header"><h1>My Schedule</h1></div><LoadingSpinner fullPage label="Loading schedule..." /></div></div>;
   }
 
   if (!myResource) {

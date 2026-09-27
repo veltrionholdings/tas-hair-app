@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import LoadingSpinner from '../../components/LoadingSpinner';
 import './AdminPages.css';
 
 function AdminBusinessProfilePage() {
@@ -57,7 +58,7 @@ function AdminBusinessProfilePage() {
   }
 
   if (loading) {
-    return <div className="page admin-page"><div className="container"><div className="page-header"><h1>Business Profile</h1></div><div className="loading-shimmer" style={{ height: 300 }} /></div></div>;
+    return <div className="page admin-page"><div className="container"><div className="page-header"><h1>Business Profile</h1></div><LoadingSpinner fullPage label="Loading profile..." /></div></div>;
   }
 
   return (

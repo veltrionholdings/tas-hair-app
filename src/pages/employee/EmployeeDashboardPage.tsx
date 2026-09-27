@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api, Booking } from '../../api/client';
 import { getMyResource } from '../../utils/getMyResource';
+import LoadingSpinner from '../../components/LoadingSpinner';
 import '../admin/AdminPages.css';
 
 function EmployeeDashboardPage() {
@@ -57,7 +58,7 @@ function EmployeeDashboardPage() {
   }
 
   if (loading) {
-    return <div className="page admin-page"><div className="container"><div className="page-header"><h1>My Day</h1></div><div className="loading-shimmer" style={{ height: 200 }} /></div></div>;
+    return <div className="page admin-page"><div className="container"><div className="page-header"><h1>My Day</h1></div><LoadingSpinner fullPage label="Loading your day..." /></div></div>;
   }
 
   const today = new Date().toISOString().split('T')[0];

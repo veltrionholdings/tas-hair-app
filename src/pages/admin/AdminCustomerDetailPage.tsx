@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Booking } from '../../api/client';
+import LoadingSpinner from '../../components/LoadingSpinner';
 import './AdminPages.css';
 
 function AdminCustomerDetailPage() {
@@ -67,7 +68,7 @@ function AdminCustomerDetailPage() {
   }
 
   if (loading) {
-    return <div className="page admin-page"><div className="container"><div className="loading-shimmer" style={{ height: 200 }} /></div></div>;
+    return <div className="page admin-page"><div className="container"><LoadingSpinner fullPage label="Loading customer..." /></div></div>;
   }
 
   if (!customer) {

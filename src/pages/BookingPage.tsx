@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { api, Service, Resource, AvailableSlot, isAuthenticated, getCustomerId, getStoredEmail } from '../api/client';
+import LoadingSpinner from '../components/LoadingSpinner';
 import './BookingPage.css';
 
 type BookingStep = 'service' | 'stylist' | 'datetime' | 'confirm';
@@ -218,10 +219,7 @@ function BookingPage() {
     return (
       <div className="page booking-page">
         <div className="container" style={{ paddingTop: '2rem', textAlign: 'center' }}>
-          <div className="loading-shimmer" style={{ height: 40, width: '60%', margin: '0 auto 1rem' }} />
-          <div className="loading-shimmer" style={{ height: 50, marginBottom: '0.5rem' }} />
-          <div className="loading-shimmer" style={{ height: 50, marginBottom: '0.5rem' }} />
-          <div className="loading-shimmer" style={{ height: 50 }} />
+          <LoadingSpinner fullPage label="Loading..." />
         </div>
       </div>
     );
@@ -356,10 +354,7 @@ function BookingPage() {
             </div>
 
             {slotsLoading && (
-              <div className="loading-spinner">
-                <div className="spinner" />
-                <span>Checking availability...</span>
-              </div>
+              <LoadingSpinner size={48} label="Checking availability..." />
             )}
 
             {!slotsLoading && slots.length > 0 && (

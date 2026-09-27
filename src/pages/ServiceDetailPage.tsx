@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { api, Service } from '../api/client';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 function ServiceDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -23,7 +24,7 @@ function ServiceDetailPage() {
   }
 
   if (loading) {
-    return <div className="page"><div className="container" style={{ padding: '2rem 1rem' }}><div className="loading-shimmer" style={{ height: 200, borderRadius: 12 }} /></div></div>;
+    return <div className="page"><div className="container" style={{ padding: '2rem 1rem' }}><LoadingSpinner fullPage label="Loading service..." /></div></div>;
   }
 
   if (!service) {

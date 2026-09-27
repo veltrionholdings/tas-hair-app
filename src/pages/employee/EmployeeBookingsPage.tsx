@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api, Booking, Resource } from '../../api/client';
 import { getMyResource } from '../../utils/getMyResource';
+import LoadingSpinner from '../../components/LoadingSpinner';
 import '../admin/AdminPages.css';
 
 type ViewMode = 'list' | 'calendar';
@@ -242,7 +243,7 @@ function EmployeeBookingsPage() {
 
         {/* Content */}
         {loading ? (
-          <div className="loading-state"><div className="loading-shimmer" style={{ height: 80 }} /><div className="loading-shimmer" style={{ height: 80 }} /></div>
+          <LoadingSpinner fullPage label="Loading bookings..." />
         ) : bookings.length === 0 ? (
           <div className="empty-state"><p>No bookings found.</p></div>
         ) : viewMode === 'calendar' ? (

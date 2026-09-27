@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api, Booking, isAuthenticated } from '../api/client';
+import LoadingSpinner from '../components/LoadingSpinner';
 import './MyBookingsPage.css';
 
 function MyBookingsPage() {
@@ -73,7 +74,7 @@ function MyBookingsPage() {
     return (
       <div className="page my-bookings-page"><div className="container">
         <div className="page-header"><h1>My Bookings</h1><p>Your appointments</p></div>
-        <div className="loading-state"><div className="loading-shimmer" /><div className="loading-shimmer" /></div>
+        <LoadingSpinner fullPage label="Loading your bookings..." />
       </div></div>
     );
   }

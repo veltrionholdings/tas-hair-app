@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api, Service } from '../api/client';
+import LoadingSpinner from '../components/LoadingSpinner';
 import './ServicesPage.css';
 
 function ServicesPage() {
@@ -44,11 +45,7 @@ function ServicesPage() {
             <h1>Our Services</h1>
             <p>Expert hair services tailored to you</p>
           </div>
-          <div className="loading-state">
-            <div className="loading-shimmer" />
-            <div className="loading-shimmer" />
-            <div className="loading-shimmer" />
-          </div>
+          <LoadingSpinner fullPage label="Loading services..." />
         </div>
       </div>
     );

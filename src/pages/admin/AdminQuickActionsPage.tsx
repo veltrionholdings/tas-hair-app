@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, Service, Resource } from '../../api/client';
+import LoadingSpinner from '../../components/LoadingSpinner';
 import './AdminPages.css';
 
 function AdminQuickActionsPage() {
@@ -88,7 +89,7 @@ function AdminQuickActionsPage() {
   }
 
   if (loading) {
-    return <div className="page admin-page"><div className="container"><div className="page-header"><h1>Quick Actions</h1></div><div className="loading-shimmer" style={{ height: 200 }} /></div></div>;
+    return <div className="page admin-page"><div className="container"><div className="page-header"><h1>Quick Actions</h1></div><LoadingSpinner fullPage label="Loading..." /></div></div>;
   }
 
   return (

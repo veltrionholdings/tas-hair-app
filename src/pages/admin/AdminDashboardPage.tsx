@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api, Booking } from '../../api/client';
+import LoadingSpinner from '../../components/LoadingSpinner';
 import './AdminPages.css';
 
 function AdminDashboardPage() {
@@ -38,8 +39,7 @@ function AdminDashboardPage() {
       <div className="page admin-page">
         <div className="container">
           <div className="page-header"><h1>Dashboard</h1></div>
-          <div className="loading-shimmer" style={{ height: 80, borderRadius: 12, marginBottom: '1rem' }} />
-          <div className="loading-shimmer" style={{ height: 200, borderRadius: 12 }} />
+          <LoadingSpinner fullPage label="Loading dashboard..." />
         </div>
       </div>
     );

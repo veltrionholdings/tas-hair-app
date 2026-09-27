@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api, Service } from '../../api/client';
 import ConfirmModal from '../../components/ConfirmModal';
+import LoadingSpinner from '../../components/LoadingSpinner';
 import './AdminPages.css';
 
 function AdminServicesPage() {
@@ -163,7 +164,7 @@ function AdminServicesPage() {
         )}
 
         {loading ? (
-          <div className="loading-state"><div className="loading-shimmer" style={{ height: 60 }} /><div className="loading-shimmer" style={{ height: 60 }} /></div>
+          <LoadingSpinner fullPage label="Loading services..." />
         ) : (
           <div className="staff-list">
             {services.map(svc => (

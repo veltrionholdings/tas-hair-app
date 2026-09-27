@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api, Service, Resource } from '../../api/client';
 import { getMyResource } from '../../utils/getMyResource';
+import LoadingSpinner from '../../components/LoadingSpinner';
 import '../admin/AdminPages.css';
 
 function EmployeeWalkInPage() {
@@ -59,7 +60,7 @@ function EmployeeWalkInPage() {
   }
 
   if (loading) {
-    return <div className="page admin-page"><div className="container"><div className="page-header"><h1>Walk-In</h1></div><div className="loading-shimmer" style={{ height: 200 }} /></div></div>;
+    return <div className="page admin-page"><div className="container"><div className="page-header"><h1>Walk-In</h1></div><LoadingSpinner fullPage label="Loading..." /></div></div>;
   }
 
   return (

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import LoadingSpinner from '../../components/LoadingSpinner';
 import '../admin/AdminPages.css';
 
 function AdminSettingsPage() {
@@ -69,7 +70,7 @@ function AdminSettingsPage() {
       <div className="page admin-page">
         <div className="container">
           <div className="page-header"><h1>Settings</h1></div>
-          <div className="loading-shimmer" style={{ height: 300, borderRadius: 12 }} />
+          <LoadingSpinner fullPage label="Loading settings..." />
         </div>
       </div>
     );

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api, User, Resource, Service } from '../../api/client';
 import ConfirmModal from '../../components/ConfirmModal';
+import LoadingSpinner from '../../components/LoadingSpinner';
 import './AdminPages.css';
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -280,7 +281,7 @@ function StaffPage() {
 
         {/* Staff Section */}
         {loading ? (
-          <div className="loading-state"><div className="loading-shimmer" style={{ height: 70 }} /><div className="loading-shimmer" style={{ height: 70 }} /></div>
+          <LoadingSpinner fullPage label="Loading staff..." />
         ) : (
           <>
             <h3 style={{ fontFamily: 'var(--font-body)', fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-grey)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '0.75rem' }}>

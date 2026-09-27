@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { api, Booking, Resource } from '../../api/client';
 import ConfirmModal from '../../components/ConfirmModal';
+import LoadingSpinner from '../../components/LoadingSpinner';
 import './AdminPages.css';
 
 type ViewMode = 'list' | 'calendar';
@@ -292,10 +293,7 @@ function AdminBookingsPage() {
 
         {/* Content */}
         {loading ? (
-          <div className="loading-state">
-            <div className="loading-shimmer" style={{ height: 100 }} />
-            <div className="loading-shimmer" style={{ height: 100 }} />
-          </div>
+          <LoadingSpinner fullPage label="Loading bookings..." />
         ) : bookings.length === 0 ? (
           <div className="empty-state"><p>No bookings found.</p></div>
         ) : showViewToggle && viewMode === 'calendar' ? (
