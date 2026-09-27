@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { authenticate, signUp, confirmSignUp, completeNewPassword, getUserRole, ensureCustomerRecord, forgotPassword, confirmForgotPassword } from '../api/client';
+import { authenticate, signUp, confirmSignUp, resendSignUpCode, completeNewPassword, getUserRole, ensureCustomerRecord, forgotPassword, confirmForgotPassword } from '../api/client';
 import PhoneInput from '../components/PhoneInput';
 import '../components/PhoneInput.css';
 import './LoginPage.css';
@@ -22,9 +22,18 @@ function LoginPage() {
   const [phone, setPhone] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
   const [resetCode, setResetCode] = useState('');
+  const [marketingConsent, setMarketingConsent] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+
+  // Tick down the resend cooldown once per second.
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const t = setTimeout(() => setResendCooldown(c => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendCooldown]);
 
   function navigateAfterLogin() {
     const role = getUserRole();
@@ -89,15 +98,28 @@ function LoginPage() {
     setLoading(true);
     setErrorMessage('');
     try {
-      await signUp(email, password, firstName, lastName, phone);
+      await signUp(email, password, firstName, lastName, phone, marketingConsent);
       setSuccessMessage('Account created! Check your email for a verification code.');
       setMode('verify');
+      setResendCooldown(30);
       setPassword('');
       setConfirmPassword('');
     } catch (err: any) {
       setErrorMessage(err.message || 'Sign up failed. Please try again.');
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleResendCode() {
+    if (resendCooldown > 0 || !email) return;
+    setErrorMessage('');
+    try {
+      await resendSignUpCode(email);
+      setSuccessMessage('A new verification code has been sent to your email.');
+      setResendCooldown(30);
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Could not resend the code. Please try again shortly.');
     }
   }
 
@@ -276,6 +298,18 @@ function LoginPage() {
               <label htmlFor="signup-confirm">Confirm Password *</label>
               <input id="signup-confirm" type="password" className="form-input" placeholder="••••••••" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required autoComplete="new-password" />
             </div>
+            <label className="consent-check">
+              <input
+                type="checkbox"
+                checked={marketingConsent}
+                onChange={e => setMarketingConsent(e.target.checked)}
+              />
+              <span>
+                I'd like to receive news, offers and appointment reminders from Tas Hair by email.
+                You can change this anytime in your profile, and every email includes an
+                unsubscribe link.
+              </span>
+            </label>
             <button type="submit" className="btn btn-primary btn-full btn-lg" disabled={loading}>
               {loading ? 'Creating account...' : 'Create Account'}
             </button>
@@ -291,6 +325,15 @@ function LoginPage() {
             </div>
             <button type="submit" className="btn btn-primary btn-full btn-lg" disabled={loading}>
               {loading ? 'Verifying...' : 'Verify Email'}
+            </button>
+            <button
+              type="button"
+              className="link-btn"
+              style={{ display: 'block', margin: '1rem auto 0', fontSize: '0.8125rem' }}
+              onClick={handleResendCode}
+              disabled={resendCooldown > 0}
+            >
+              {resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : "Didn't get a code? Resend"}
             </button>
           </form>
         )}

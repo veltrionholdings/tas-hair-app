@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
-import { api, logout, getStoredEmail, getUserRole, isAuthenticated, getCustomerId, Customer } from '../api/client';
+import { api, logout, getStoredEmail, getUserRole, isAuthenticated, getCustomerId, Customer, MARKETING_CONSENT_VERSION } from '../api/client';
 import PhoneInput from '../components/PhoneInput';
 import '../components/PhoneInput.css';
 import ConfirmModal from '../components/ConfirmModal';
@@ -28,6 +28,7 @@ function ProfilePage() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
+  const [marketingConsent, setMarketingConsent] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [showLogout, setShowLogout] = useState(false);
@@ -87,6 +88,7 @@ function ProfilePage() {
             setFirstName(data.first_name || '');
             setLastName(data.last_name || '');
             setPhone(data.phone || '');
+            setMarketingConsent(data.marketing_consent === true);
           }
         }
       }
@@ -115,7 +117,13 @@ function ProfilePage() {
           {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` },
-            body: JSON.stringify({ first_name: firstName, last_name: lastName, phone: phone || undefined }),
+            body: JSON.stringify({
+              first_name: firstName,
+              last_name: lastName,
+              phone: phone || undefined,
+              marketing_consent: marketingConsent,
+              marketing_consent_version: MARKETING_CONSENT_VERSION,
+            }),
           }
         );
         if (response.ok) {
@@ -170,6 +178,19 @@ function ProfilePage() {
               <input type="email" className="form-input" value={email} disabled style={{ opacity: 0.6 }} />
               <span style={{ fontSize: '0.6875rem', color: 'var(--color-grey)' }}>Email cannot be changed here</span>
             </div>
+            {!isEmployee && (
+              <label className="consent-toggle">
+                <input
+                  type="checkbox"
+                  checked={marketingConsent}
+                  onChange={e => setMarketingConsent(e.target.checked)}
+                />
+                <span>
+                  Send me news, offers and appointment reminders from Tas Hair by email. Every
+                  email includes an unsubscribe link.
+                </span>
+              </label>
+            )}
             <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
               <button type="button" className="btn btn-secondary" style={{ flex: 1 }} onClick={() => { setEditing(false); setMessage(''); }}>Cancel</button>
               <button type="submit" className="btn btn-primary" style={{ flex: 1 }} disabled={saving || !firstName}>{saving ? 'Saving...' : 'Save'}</button>

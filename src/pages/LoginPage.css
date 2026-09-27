@@ -74,3 +74,23 @@
   grid-template-columns: 1fr 1fr;
   gap: var(--space-sm);
 }
+
+.consent-check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  margin: var(--space-md) 0 var(--space-lg);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--color-grey-dark);
+  cursor: pointer;
+}
+
+.consent-check input[type='checkbox'] {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-top: 0.1rem;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}

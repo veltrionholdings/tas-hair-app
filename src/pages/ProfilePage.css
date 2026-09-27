@@ -59,3 +59,23 @@
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+
+.consent-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin: 0.5rem 0 0.25rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--color-grey-dark);
+  cursor: pointer;
+}
+
+.consent-toggle input[type='checkbox'] {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-top: 0.1rem;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}

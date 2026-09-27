@@ -7,6 +7,9 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000
 const COGNITO_CLIENT_ID = import.meta.env.VITE_COGNITO_CLIENT_ID || 'm535i5660f5harvfu6fou0cu9';
 const COGNITO_REGION = import.meta.env.VITE_COGNITO_REGION || 'eu-west-1';
 
+/** Version of the marketing-consent wording currently shown to users (POPIA). */
+export const MARKETING_CONSENT_VERSION = 'v1';
+
 interface ApiError {
   error: {
     code: string;
@@ -268,6 +271,9 @@ export interface Customer {
   last_name: string;
   email: string | null;
   phone: string | null;
+  marketing_consent?: boolean;
+  marketing_consent_at?: string | null;
+  marketing_consent_version?: string | null;
 }
 
 export interface CreateBookingRequest {
@@ -284,6 +290,8 @@ export interface CreateCustomerRequest {
   last_name: string;
   email?: string;
   phone?: string;
+  marketing_consent?: boolean;
+  marketing_consent_version?: string;
 }
 
 export interface Pagination {
@@ -404,6 +412,7 @@ export async function signUp(
   firstName: string,
   lastName: string,
   phone: string,
+  marketingConsent: boolean = false,
   tenantId: string = 'da8e5df8-f070-4671-a176-590a76c574b2'
 ): Promise<void> {
   const url = `https://cognito-idp.${COGNITO_REGION}.amazonaws.com/`;
@@ -435,7 +444,34 @@ export async function signUp(
   }
 
   // Store registration details locally so we can create the customer record after login
-  localStorage.setItem('pending_customer', JSON.stringify({ firstName, lastName, phone, email }));
+  localStorage.setItem(
+    'pending_customer',
+    JSON.stringify({ firstName, lastName, phone, email, marketingConsent })
+  );
+}
+
+/**
+ * Resend the email verification code for an unconfirmed sign-up.
+ */
+export async function resendSignUpCode(email: string): Promise<void> {
+  const url = `https://cognito-idp.${COGNITO_REGION}.amazonaws.com/`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-amz-json-1.1',
+      'X-Amz-Target': 'AWSCognitoIdentityProviderService.ResendConfirmationCode',
+    },
+    body: JSON.stringify({
+      ClientId: COGNITO_CLIENT_ID,
+      Username: email,
+    }),
+  });
+
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.message || 'Failed to resend verification code');
+  }
 }
 
 /**
@@ -447,12 +483,14 @@ export async function ensureCustomerRecord(): Promise<Customer | null> {
   const pending = localStorage.getItem('pending_customer');
   if (pending) {
     try {
-      const { firstName, lastName, phone, email } = JSON.parse(pending);
+      const { firstName, lastName, phone, email, marketingConsent } = JSON.parse(pending);
       const customer = await api.createCustomer({
         first_name: firstName,
         last_name: lastName,
         phone,
         email,
+        marketing_consent: marketingConsent === true,
+        marketing_consent_version: MARKETING_CONSENT_VERSION,
       });
       localStorage.removeItem('pending_customer');
       localStorage.setItem('customer_id', customer.id);
