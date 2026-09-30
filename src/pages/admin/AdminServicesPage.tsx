@@ -53,6 +53,12 @@ function AdminServicesPage() {
     setSaving(true); setMessage('');
 
     try {
+      // Preserve any existing metadata and set/clear the category.
+      const existing = editingId ? services.find(s => s.id === editingId) : undefined;
+      const metadata: Record<string, unknown> = { ...(existing?.metadata || {}) };
+      if (category.trim()) metadata.category = category.trim();
+      else delete metadata.category;
+
       if (editingId) {
         await api.updateService(editingId, {
           name,
@@ -61,7 +67,8 @@ function AdminServicesPage() {
           buffer_minutes: parseInt(buffer) || 0,
           price_cents: price ? parseInt(price) * 100 : null,
           currency: 'ZAR',
-        } as any);
+          metadata,
+        });
         setMessage(`"${name}" updated.`);
       } else {
         const resourceTypeId = services[0]?.resource_type_id;
@@ -77,6 +84,7 @@ function AdminServicesPage() {
               duration_minutes: parseInt(duration), buffer_minutes: parseInt(buffer) || 0,
               resource_type_id: resourceTypeId,
               price_cents: price ? parseInt(price) * 100 : undefined, currency: 'ZAR',
+              metadata,
             }),
           }
         );
@@ -153,7 +161,13 @@ function AdminServicesPage() {
               </div>
               <div className="form-group">
                 <label>Category</label>
-                <input type="text" className="form-input" value={category} onChange={e => setCategory(e.target.value)} placeholder="e.g. Cuts, Colour, Treatments" />
+                <input type="text" className="form-input" list="service-categories" value={category} onChange={e => setCategory(e.target.value)} placeholder="e.g. Relaxer, Treatment, Wig, Cut" />
+                <datalist id="service-categories">
+                  <option value="Relaxer" />
+                  <option value="Treatment" />
+                  <option value="Wig" />
+                  <option value="Cut" />
+                </datalist>
               </div>
               <div className="form-actions">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
@@ -171,7 +185,7 @@ function AdminServicesPage() {
               <div key={svc.id} className="staff-card card">
                 <div className="staff-info">
                   <div className="staff-name">{svc.name}</div>
-                  <div className="staff-email">{svc.description || 'No description'}</div>
+                  <div className="staff-email">{(svc.metadata as any)?.category || 'Uncategorised'}</div>
                 </div>
                 <div className="staff-meta">
                   <span className="staff-role">{formatDuration(svc.duration_minutes)}</span>

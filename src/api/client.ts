@@ -103,7 +103,7 @@ class BookingsApiClient {
     return this.request<Service>('GET', `/services/${id}`);
   }
 
-  async updateService(id: string, data: Partial<Pick<Service, 'name' | 'description' | 'duration_minutes' | 'buffer_minutes' | 'price_cents' | 'currency' | 'is_active'>>) {
+  async updateService(id: string, data: Partial<Pick<Service, 'name' | 'description' | 'duration_minutes' | 'buffer_minutes' | 'price_cents' | 'currency' | 'is_active' | 'metadata'>>) {
     return this.request<Service>('PATCH', `/services/${id}`, data);
   }
 
