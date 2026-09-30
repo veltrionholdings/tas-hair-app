@@ -56,34 +56,15 @@ export default function LoadingSpinner({
           />
         </svg>
 
-        {/* Tas Hair mark (matches favicon.svg) */}
-        <svg
+        {/* Tas Hair mark */}
+        <img
           className="loading-spinner__mark"
-          viewBox="0 0 64 64"
+          src="/logo-mark.png"
+          alt=""
           width={markSize}
           height={markSize}
           aria-hidden="true"
-        >
-          <defs>
-            <linearGradient id="lsHairGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#E8CCF0" />
-              <stop offset="45%" stopColor="#D8A8E8" />
-              <stop offset="100%" stopColor="#FFFFFF" />
-            </linearGradient>
-          </defs>
-          <rect width="64" height="64" rx="14" fill="#7B2D8B" />
-          <path
-            d="M 22 16 L 44 16 L 27 38 Z"
-            fill="none"
-            stroke="#FFFFFF"
-            strokeWidth="2.4"
-            strokeLinejoin="round"
-            opacity="0.95"
-          />
-          <g fill="url(#lsHairGrad)">
-            <path d="M 33 19 C 41 24, 43 33, 40 43 C 37 49, 33 53, 32 58 C 31 53, 33 47, 34 42 C 31 47, 28 52, 27 57 C 26 52, 29 45, 31 40 C 28 44, 25 48, 24 53 C 24 47, 28 40, 32 35 C 31 29, 31 24, 33 19 Z" />
-          </g>
-        </svg>
+        />
       </div>
 
       {label && <p className="loading-spinner__label">{label}</p>}
